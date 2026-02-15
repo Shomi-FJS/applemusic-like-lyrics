@@ -23,3 +23,7 @@ packages/player/updater-key.pub
 packages/player/updater-key
 packages/player/dist/index.html
 packages/player/dist/git-metadata.json
+packages/player/dist/vite.svg
+.gitignore
+packages/player/dist/tauri.svg
+packages/player/dist/screenshot.html
