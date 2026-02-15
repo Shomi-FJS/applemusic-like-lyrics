@@ -295,12 +295,12 @@ async fn api_player_command(
 }
 
 async fn api_fullscreen(State(state): State<HttpServerState>) -> StatusCode {
-    #[cfg(mobile)]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     {
         let _ = state;
         return StatusCode::NOT_IMPLEMENTED;
     }
-    #[cfg(not(mobile))]
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
     let Some(win) = state.app.get_webview_window("main") else {
         return StatusCode::NOT_FOUND;
@@ -325,12 +325,12 @@ async fn api_always_on_top(
     State(state): State<HttpServerState>,
     Json(req): Json<AlwaysOnTopRequest>,
 ) -> StatusCode {
-    #[cfg(mobile)]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     {
         let _ = (state, req);
         return StatusCode::NOT_IMPLEMENTED;
     }
-    #[cfg(not(mobile))]
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
     let Some(win) = state.app.get_webview_window("main") else {
         return StatusCode::NOT_FOUND;

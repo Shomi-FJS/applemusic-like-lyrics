@@ -126,12 +126,12 @@ fn set_window_always_on_top<R: Runtime>(
     enabled: bool,
     app: AppHandle<R>,
 ) -> Result<(), String> {
-    #[cfg(mobile)]
+    #[cfg(any(target_os = "android", target_os = "ios"))]
     {
         let _ = (enabled, app);
         return Err("Unsupported on mobile.".to_string());
     }
-    #[cfg(not(mobile))]
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
     if let Some(window) = app.get_webview_window("main") {
         window.set_always_on_top(enabled).map_err(|e| e.to_string())
