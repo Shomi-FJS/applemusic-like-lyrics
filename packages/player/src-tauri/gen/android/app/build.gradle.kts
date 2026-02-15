@@ -83,10 +83,19 @@ tasks.register<Copy>("copyCppSharedLib") {
         "x86_64" to "x86_64-linux-android"
     )
 
+    val osName = System.getProperty("os.name").lowercase()
+    val hostTag = if (osName.contains("win")) {
+        "windows-x86_64"
+    } else if (osName.contains("mac")) {
+        "darwin-x86_64"
+    } else {
+        "linux-x86_64"
+    }
+
     project.android.defaultConfig.ndk.abiFilters.forEach { abi ->
         val toolchainAbi = abiMap[abi]
         if (toolchainAbi != null) {
-            val sourcePath = "$ndkDir/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib/$toolchainAbi/libc++_shared.so"
+            val sourcePath = "$ndkDir/toolchains/llvm/prebuilt/$hostTag/sysroot/usr/lib/$toolchainAbi/libc++_shared.so"
             println("Copying $sourcePath for $abi")
             from(sourcePath)
             into("src/main/jniLibs/$abi")
