@@ -126,10 +126,18 @@ fn set_window_always_on_top<R: Runtime>(
     enabled: bool,
     app: AppHandle<R>,
 ) -> Result<(), String> {
+    #[cfg(mobile)]
+    {
+        let _ = (enabled, app);
+        return Err("Unsupported on mobile.".to_string());
+    }
+    #[cfg(not(mobile))]
+    {
     if let Some(window) = app.get_webview_window("main") {
         window.set_always_on_top(enabled).map_err(|e| e.to_string())
     } else {
         Err("Main window not found.".to_string())
+    }
     }
 }
 

@@ -295,6 +295,13 @@ async fn api_player_command(
 }
 
 async fn api_fullscreen(State(state): State<HttpServerState>) -> StatusCode {
+    #[cfg(mobile)]
+    {
+        let _ = state;
+        return StatusCode::NOT_IMPLEMENTED;
+    }
+    #[cfg(not(mobile))]
+    {
     let Some(win) = state.app.get_webview_window("main") else {
         return StatusCode::NOT_FOUND;
     };
@@ -311,12 +318,20 @@ async fn api_fullscreen(State(state): State<HttpServerState>) -> StatusCode {
     } else {
         StatusCode::INTERNAL_SERVER_ERROR
     }
+    }
 }
 
 async fn api_always_on_top(
     State(state): State<HttpServerState>,
     Json(req): Json<AlwaysOnTopRequest>,
 ) -> StatusCode {
+    #[cfg(mobile)]
+    {
+        let _ = (state, req);
+        return StatusCode::NOT_IMPLEMENTED;
+    }
+    #[cfg(not(mobile))]
+    {
     let Some(win) = state.app.get_webview_window("main") else {
         return StatusCode::NOT_FOUND;
     };
@@ -330,6 +345,7 @@ async fn api_always_on_top(
         StatusCode::OK
     } else {
         StatusCode::INTERNAL_SERVER_ERROR
+    }
     }
 }
 
