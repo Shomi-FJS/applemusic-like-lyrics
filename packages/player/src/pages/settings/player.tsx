@@ -75,6 +75,8 @@ import {
 	advanceLyricDynamicLyricTimeAtom,
 	DarkMode,
 	darkModeAtom,
+	enableAlwaysOnTopAtom,
+	enableHttpServerAtom,
 	enableMediaControlsAtom,
 	enableWsLyricsInSmtcModeAtom,
 	showStatJSFrameAtom,
@@ -210,7 +212,7 @@ const LyricFontSetting: FC = () => {
 					</Text>
 					<Text as="div" color="gray" size="2" className={styles.desc}>
 						<Trans i18nKey="page.settings.lyricFont.fontWeight.description">
-							等同于 CSS 的 font-weight 属性，设置 0 为系统控制，推荐值 600
+							等同于 CSS 的 font-weight 属性，设置 0 为默认
 						</Trans>
 					</Text>
 				</Flex>
@@ -307,6 +309,13 @@ function SliderSettings<T extends number | number[]>({
 const GeneralSettings = () => {
 	const { t, i18n } = useTranslation();
 	const [mode, setMode] = useAtom(darkModeAtom);
+	const [localIps, setLocalIps] = useState<string[]>([]);
+
+	useLayoutEffect(() => {
+		invoke<string[]>("get_local_ips")
+			.then(setLocalIps)
+			.catch(console.error);
+	}, []);
 
 	const supportedLanguagesMenu = useMemo(() => {
 		function collectLocaleKey(
@@ -418,6 +427,28 @@ const GeneralSettings = () => {
 					</Select.Content>
 				</Select.Root>
 			</SettingEntry>
+			<SwitchSettings
+				label={t(
+					"page.settings.general.remoteHttpServer.label",
+					"启用 13533 端口控制服务",
+				)}
+				description={`${t(
+					"page.settings.general.remoteHttpServer.description",
+					"用于远程控制页面与 HTTP 接口，关闭后无法通过 13533 访问",
+				)}${localIps.length > 0 ? `\n本机 IP:\n${localIps.join("\n")}` : ""}`}
+				configAtom={enableHttpServerAtom}
+			/>
+			<SwitchSettings
+				label={t(
+					"page.settings.general.windowAlwaysOnTop.label",
+					"启用窗口置顶",
+				)}
+				description={t(
+					"page.settings.general.windowAlwaysOnTop.description",
+					"将应用窗口设置为始终置顶",
+				)}
+				configAtom={enableAlwaysOnTopAtom}
+			/>
 		</>
 	);
 };
@@ -557,7 +588,7 @@ const LyricAppearanceSettings = () => {
 			{
 				label: t(
 					"page.settings.lyricAppearance.lyricFontSize.menu.large",
-					"大",
+					"大(推荐)",
 				),
 				value: LyricSizePreset.Large,
 			},

@@ -5,6 +5,7 @@ use ffmpeg_next as ffmpeg;
 use serde::*;
 use serde_json::Value;
 use std::net::SocketAddr;
+use std::sync::{Arc, LazyLock};
 use tauri::ipc::Channel;
 use tauri::{
     AppHandle, Manager, PhysicalSize, Runtime, Size, State, WebviewWindowBuilder,
@@ -13,6 +14,7 @@ use tauri::{
 use tokio::sync::RwLock;
 use tracing::*;
 
+mod http_server;
 mod player;
 mod screen_capture;
 mod server;
@@ -20,8 +22,10 @@ mod server;
 #[cfg(target_os = "windows")]
 mod external_media_controller;
 
-pub type AMLLWebSocketServerWrapper = RwLock<AMLLWebSocketServer>;
+pub type AMLLWebSocketServerWrapper = Arc<RwLock<AMLLWebSocketServer>>;
 pub type AMLLWebSocketServerState<'r> = State<'r, AMLLWebSocketServerWrapper>;
+pub type HttpServerControllerWrapper = Arc<RwLock<http_server::HttpServerController>>;
+pub type HttpServerControllerState<'r> = State<'r, HttpServerControllerWrapper>;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -30,7 +34,7 @@ async fn ws_reopen_connection(
     ws: AMLLWebSocketServerState<'_>,
     channel: Channel<ws_protocol::v2::Payload>,
 ) -> Result<(), String> {
-    ws.write().await.reopen(addr.to_string(), channel);
+    ws.write().await.reopen(addr.to_string(), Some(channel));
     Ok(())
 }
 
@@ -57,6 +61,33 @@ async fn ws_broadcast_payload(
 }
 
 #[tauri::command]
+async fn set_http_server_enabled(
+    enabled: bool,
+    state: HttpServerControllerState<'_>,
+) -> Result<(), String> {
+    state.write().await.set_enabled(enabled).await;
+    Ok(())
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteNowPlayingInfo {
+    pub title: String,
+    pub artist: String,
+    pub album: String,
+    pub is_playing: bool,
+    pub cover: Option<String>,
+}
+
+pub static REMOTE_NOW_PLAYING: LazyLock<RwLock<Option<RemoteNowPlayingInfo>>> =
+    LazyLock::new(|| RwLock::new(None));
+
+#[tauri::command]
+async fn update_remote_now_playing(info: RemoteNowPlayingInfo) {
+    REMOTE_NOW_PLAYING.write().await.replace(info);
+}
+
+#[tauri::command]
 fn restart_app<R: Runtime>(app: AppHandle<R>) {
     tauri::process::restart(&app.env())
 }
@@ -69,6 +100,34 @@ async fn reset_window_theme<R: Runtime>(app: AppHandle<R>) -> Result<(), String>
             return Err(e.to_string());
         }
         Ok(())
+    } else {
+        Err("Main window not found.".to_string())
+    }
+}
+
+#[tauri::command]
+fn get_local_ips() -> Result<Vec<String>, String> {
+    use local_ip_address::list_afinet_netifas;
+    let interfaces = list_afinet_netifas().map_err(|e| e.to_string())?;
+    let ips = interfaces
+        .into_iter()
+        .filter_map(|(_, ip)| match ip {
+            std::net::IpAddr::V4(ipv4) if !ipv4.is_loopback() && !ipv4.is_link_local() => {
+                Some(ipv4.to_string())
+            }
+            _ => None,
+        })
+        .collect();
+    Ok(ips)
+}
+
+#[tauri::command]
+fn set_window_always_on_top<R: Runtime>(
+    enabled: bool,
+    app: AppHandle<R>,
+) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.set_always_on_top(enabled).map_err(|e| e.to_string())
     } else {
         Err("Main window not found.".to_string())
     }
@@ -338,6 +397,9 @@ pub fn run() {
             ws_get_connections,
             ws_broadcast_payload,
             ws_close_connection,
+            set_http_server_enabled,
+            set_window_always_on_top,
+            update_remote_now_playing,
             open_screenshot_window,
             screen_capture::take_screenshot,
             player::local_player_send_msg,
@@ -349,6 +411,7 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             external_media_controller::request_smtc_update,
             reset_window_theme,
+            get_local_ips,
         ])
         .setup(|app| {
             player::init_local_player(app.handle().clone());
@@ -365,9 +428,13 @@ pub fn run() {
             let _ = app
                 .handle()
                 .plugin(tauri_plugin_global_shortcut::Builder::new().build());
-            app.manage::<AMLLWebSocketServerWrapper>(RwLock::new(AMLLWebSocketServer::new(
+            let ws_server = Arc::new(RwLock::new(AMLLWebSocketServer::new(app.handle().clone())));
+            app.manage::<AMLLWebSocketServerWrapper>(ws_server.clone());
+            let http_server = Arc::new(RwLock::new(http_server::HttpServerController::new(
                 app.handle().clone(),
+                ws_server,
             )));
+            app.manage::<HttpServerControllerWrapper>(http_server.clone());
             #[cfg(not(mobile))]
             {
                 tauri::async_runtime::block_on(recreate_window(app.handle(), "main", None));

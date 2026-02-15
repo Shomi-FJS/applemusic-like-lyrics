@@ -88,6 +88,36 @@ export const enableMediaControlsAtom = atom(
 	},
 );
 
+const enableHttpServerInternalAtom = atomWithStorage(
+	"amll-player.enableHttpServer",
+	true,
+);
+
+export const enableHttpServerAtom = atom(
+	(get) => get(enableHttpServerInternalAtom),
+	(_get, set, enabled: boolean) => {
+		set(enableHttpServerInternalAtom, enabled);
+		invoke("set_http_server_enabled", { enabled }).catch((err) => {
+			console.error("设置 13533 端口控制服务状态失败", err);
+		});
+	},
+);
+
+const enableAlwaysOnTopInternalAtom = atomWithStorage(
+	"amll-player.enableAlwaysOnTop",
+	false,
+);
+
+export const enableAlwaysOnTopAtom = atom(
+	(get) => get(enableAlwaysOnTopInternalAtom),
+	(_get, set, enabled: boolean) => {
+		set(enableAlwaysOnTopInternalAtom, enabled);
+		invoke("set_window_always_on_top", { enabled }).catch((err) => {
+			console.error("设置窗口置顶状态失败", err);
+		});
+	},
+);
+
 /**
  * 是否在 SMTC 监听模式下启用 WebSocket 接收歌词。
  */

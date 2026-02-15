@@ -21,3 +21,5 @@ target/
 vendor/
 packages/player/updater-key.pub
 packages/player/updater-key
+packages/player/dist/index.html
+packages/player/dist/git-metadata.json

@@ -33,6 +33,8 @@ import {
 	DarkMode,
 	darkModeAtom,
 	displayLanguageAtom,
+	enableAlwaysOnTopAtom,
+	enableHttpServerAtom,
 	isDarkThemeAtom,
 	MusicContextMode,
 	musicContextModeAtom,
@@ -91,6 +93,20 @@ function App() {
 			}, 50);
 		};
 		initializeWindow();
+	}, [store]);
+
+	useEffect(() => {
+		const enabled = store.get(enableHttpServerAtom);
+		invoke("set_http_server_enabled", { enabled }).catch((err) => {
+			console.error("同步 13533 端口控制服务状态失败", err);
+		});
+	}, [store]);
+
+	useEffect(() => {
+		const enabled = store.get(enableAlwaysOnTopAtom);
+		invoke("set_window_always_on_top", { enabled }).catch((err) => {
+			console.error("同步窗口置顶状态失败", err);
+		});
 	}, [store]);
 
 	useLayoutEffect(() => {
@@ -206,6 +222,7 @@ function App() {
 							marginBottom: "150px",
 						}}
 					/>
+					<ToastContainer theme="dark" position="top-right" autoClose={1800} />
 				</Theme>
 			</StrictMode>
 		</>
