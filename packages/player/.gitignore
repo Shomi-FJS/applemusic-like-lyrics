@@ -8,7 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 *.local
 
@@ -22,3 +21,44 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+node_modules/
+*.log
+*.map
+*.plugin
+src/**/*.css
+lyrics/
+/index.js
+/lyric-test.js
+/index.css
+/startup_script.js
+/worker_script.js
+.DS_Store
+target/
+.yarn/cache/
+.yarn/install-state.gz
+.nx
+.idea
+.vscode/
+*.tsbuildinfo
+.million/
+packages/player/src-tauri/target/
+dist/assets/
+# 可选：补充 Tauri/前端项目常见的忽略项（推荐添加，避免上传无用文件）
+# 前端/node_modules
+node_modules/
+*.log
+# 环境变量文件
+.env
+.env.local
+# 编译后的build目录
+build/
+# IDE配置文件
+.idea/
+.vscode/
+.DS_Store/
+.nx/
+.trae/
+.vs/
+.vscode/
+.docs/
