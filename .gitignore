@@ -18,3 +18,6 @@ target/
 .vscode/
 *.tsbuildinfo
 .million/
+vendor/
+packages/player/updater-key.pub
+packages/player/updater-key
