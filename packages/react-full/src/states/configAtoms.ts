@@ -161,7 +161,7 @@ export const lyricWordFadeWidthAtom = atomWithStorage(
  */
 export const lyricFontFamilyAtom = atomWithStorage(
 	"amll-react-full.lyricFontFamily",
-	"",
+	"Misans",
 );
 
 /**
@@ -169,7 +169,7 @@ export const lyricFontFamilyAtom = atomWithStorage(
  */
 export const lyricFontWeightAtom = atomWithStorage<number | string>(
 	"amll-react-full.lyricFontWeight",
-	600,
+	482,
 );
 
 /**
@@ -177,7 +177,7 @@ export const lyricFontWeightAtom = atomWithStorage<number | string>(
  */
 export const lyricLetterSpacingAtom = atomWithStorage(
 	"amll-react-full.lyricLetterSpacing",
-	"normal",
+	"0.05em",
 );
 
 /**
@@ -237,7 +237,7 @@ export const showMusicArtistsAtom = atomWithStorage(
  */
 export const showMusicAlbumAtom = atomWithStorage(
 	"amll-react-full.showMusicAlbum",
-	false,
+	true,
 );
 
 /**
