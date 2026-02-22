@@ -27,3 +27,5 @@ packages/player/dist/vite.svg
 .gitignore
 packages/player/dist/tauri.svg
 packages/player/dist/screenshot.html
+pnpm-lock.yaml
+pnpm-lock.yaml
