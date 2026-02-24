@@ -25,6 +25,10 @@ import {
 	onClickAudioQualityTagAtom,
 } from "@applemusic-like-lyrics/react-full";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { toast } from "react-toastify";
+import { StateConnector } from "./components/StateConnector/index.tsx";
 import { StatsComponent } from "./components/StatsComponent/index.tsx";
 import { router } from "./router.tsx";
 import {
@@ -53,7 +57,33 @@ function App() {
 	const displayLanguage = useAtomValue(displayLanguageAtom);
 	const isDarkTheme = useAtomValue(isDarkThemeAtom);
 	const hasBackground = useAtomValue(hasBackgroundAtom);
-	const { i18n } = useTranslation();
+	const { i18n, t } = useTranslation();
+
+	useEffect(() => {
+		const unlisten = listen("remote-http-command", (event: any) => {
+			const payload = event.payload;
+			if (payload.command === "setFontSize") {
+				const newSize = payload.size as any;
+				store.set(lyricSizePresetAtom, newSize);
+
+				const sizeLabels: Record<string, string> = {
+					tiny: "超小",
+					"extra-small": "极小",
+					small: "小",
+					medium: "中",
+					large: "大",
+					"extra-large": "极大",
+					huge: "超大",
+				};
+
+				const label = sizeLabels[newSize] || newSize;
+				toast.info(`远程控制：歌词大小已设为“${label}”`);
+			}
+		});
+		return () => {
+			unlisten.then((f) => f());
+		};
+	}, [store]);
 
 	const darkMode = useAtomValue(darkModeAtom);
 

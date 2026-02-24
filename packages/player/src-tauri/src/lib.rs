@@ -84,7 +84,7 @@ pub static REMOTE_NOW_PLAYING: LazyLock<RwLock<Option<RemoteNowPlayingInfo>>> =
 
 #[tauri::command]
 async fn update_remote_now_playing(info: RemoteNowPlayingInfo) {
-    REMOTE_NOW_PLAYING.write().await.replace(info);
+    *REMOTE_NOW_PLAYING.write().await = Some(info);
 }
 
 #[tauri::command]

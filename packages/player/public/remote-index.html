@@ -560,6 +560,55 @@
             color: var(--text-main);
         }
 
+        .settings-divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 4px 8px;
+        }
+
+        .settings-group {
+            padding: 8px 12px;
+        }
+
+        .settings-group-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .font-size-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .font-size-btn {
+            padding: 6px 0;
+            border: 1px solid var(--btn-glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-sub);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .font-size-btn:hover {
+            background: var(--btn-glass-hover);
+            color: var(--text-main);
+            border-color: transparent;
+        }
+
+        .font-size-btn.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-color: transparent;
+        }
+
         [data-theme="light"] .settings-item:hover {
             background: rgba(0, 0, 0, 0.05);
         }
@@ -1112,6 +1161,18 @@
                             <span>🌐</span>
                             <span id="wsListenAddrLabel">WS开放地址：当前为默认（正常勿动）</span>
                         </button>
+                        <div class="settings-divider"></div>
+                        <div class="settings-group">
+                            <div class="settings-group-title">歌词字体大小</div>
+                            <div class="font-size-controls">
+                                <button class="font-size-btn" onclick="changeFontSize('tiny')">超小</button>
+                                <button class="font-size-btn" onclick="changeFontSize('small')">小号</button>
+                                <button class="font-size-btn" onclick="changeFontSize('medium')">中等</button>
+                                <button class="font-size-btn" onclick="changeFontSize('large')">大号</button>
+                                <button class="font-size-btn" onclick="changeFontSize('extra-large')">极大</button>
+                                <button class="font-size-btn" onclick="changeFontSize('huge')">超大</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="status-dot">Connected</div>
@@ -1331,6 +1392,35 @@
                 wsListenAddr = next;
                 wsListenAddrLabel.textContent = `WS开放地址：${wsListenAddr}`;
                 settingsMenu.classList.remove('show');
+            } catch (e) {
+                alert('Connection error: ' + e);
+            }
+        }
+
+        async function changeFontSize(size) {
+            try {
+                const res = await fetch(`${API_BASE}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: 'setFontSize', size: size }),
+                });
+                if (!res.ok) {
+                    alert('Command failed: ' + res.status);
+                    return;
+                }
+                
+                // Update active state in UI
+                document.querySelectorAll('.font-size-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('onclick').includes(`'${size}'`)) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Optional: hide settings menu after selection on mobile
+                if (window.innerWidth < 768) {
+                    setTimeout(() => settingsMenu.classList.remove('show'), 300);
+                }
             } catch (e) {
                 alert('Connection error: ' + e);
             }

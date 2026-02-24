@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AMLL Remote Control</title>
     <style>
         :root {
@@ -277,29 +279,67 @@
         }
 
         @keyframes bg-float {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            30% { transform: translate3d(-3%, -4%, 0) scale(1.06); }
-            60% { transform: translate3d(4%, 3%, 0) scale(1.1); }
-            100% { transform: translate3d(0, 0, 0) scale(1.03); }
+            0% {
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+
+            30% {
+                transform: translate3d(-3%, -4%, 0) scale(1.06);
+            }
+
+            60% {
+                transform: translate3d(4%, 3%, 0) scale(1.1);
+            }
+
+            100% {
+                transform: translate3d(0, 0, 0) scale(1.03);
+            }
         }
 
         @keyframes blobs-rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         @keyframes blob-move {
-            0% { transform: translate3d(0, 0, 0) scale(1) skewX(0deg); }
-            25% { transform: translate3d(8%, 10%, 0) scale(1.18) skewX(4deg); }
-            50% { transform: translate3d(-6%, 16%, 0) scale(0.9) skewX(-4deg); }
-            75% { transform: translate3d(4%, -8%, 0) scale(1.12) skewX(2deg); }
-            100% { transform: translate3d(0, 0, 0) scale(1.04) skewX(0deg); }
+            0% {
+                transform: translate3d(0, 0, 0) scale(1) skewX(0deg);
+            }
+
+            25% {
+                transform: translate3d(8%, 10%, 0) scale(1.18) skewX(4deg);
+            }
+
+            50% {
+                transform: translate3d(-6%, 16%, 0) scale(0.9) skewX(-4deg);
+            }
+
+            75% {
+                transform: translate3d(4%, -8%, 0) scale(1.12) skewX(2deg);
+            }
+
+            100% {
+                transform: translate3d(0, 0, 0) scale(1.04) skewX(0deg);
+            }
         }
 
         @keyframes sheen-drift {
-            0% { background-position: 0% 0%, 0% 0%, 0% 0%; }
-            50% { background-position: 6% 4%, -4% -3%, 0% 0%; }
-            100% { background-position: 0% 0%, 0% 0%, 0% 0%; }
+            0% {
+                background-position: 0% 0%, 0% 0%, 0% 0%;
+            }
+
+            50% {
+                background-position: 6% 4%, -4% -3%, 0% 0%;
+            }
+
+            100% {
+                background-position: 0% 0%, 0% 0%, 0% 0%;
+            }
         }
 
         .shell {
@@ -423,8 +463,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         .theme-toggle {
@@ -558,6 +605,55 @@
         .settings-item:hover {
             background: rgba(255, 255, 255, 0.1);
             color: var(--text-main);
+        }
+
+        .settings-divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: 4px 8px;
+        }
+
+        .settings-group {
+            padding: 8px 12px;
+        }
+
+        .settings-group-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .font-size-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .font-size-btn {
+            padding: 6px 0;
+            border: 1px solid var(--btn-glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-sub);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .font-size-btn:hover {
+            background: var(--btn-glass-hover);
+            color: var(--text-main);
+            border-color: transparent;
+        }
+
+        .font-size-btn.active {
+            background: var(--accent-gradient);
+            color: white;
+            border-color: transparent;
         }
 
         [data-theme="light"] .settings-item:hover {
@@ -957,25 +1053,32 @@
             .visualizer-area {
                 max-height: 220px;
             }
+
             .shell {
                 padding: 26px 20px 22px;
                 gap: 20px;
             }
+
             .track-title {
                 font-size: 20px;
             }
+
             .btn-play {
                 width: 64px;
                 height: 64px;
                 font-size: 22px;
             }
+
             .btn-glass {
                 height: 48px;
             }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
+
+            *,
+            *::before,
+            *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
@@ -998,48 +1101,50 @@
                 justify-content: space-between;
                 padding: calc(20px + env(safe-area-inset-top)) 24px calc(30px + env(safe-area-inset-bottom));
             }
-            
+
             .header {
                 margin-bottom: auto;
                 padding-top: 10px;
             }
-            
+
             .visualizer-area {
                 max-height: 32vh;
                 border-radius: 24px;
                 margin: 10px 0;
                 aspect-ratio: 1;
             }
-            
+
             .track-info {
                 margin-bottom: 24px;
             }
-            
+
             .track-title {
                 font-size: 24px;
             }
-            
+
             .controls-wrapper {
                 padding: 16px;
                 gap: 16px;
                 margin-top: auto;
                 border-radius: 24px;
             }
-            
+
             .btn-glass {
                 height: 60px;
                 font-size: 16px;
             }
-            
+
             .btn-play {
                 width: 76px;
                 height: 76px;
             }
-            .dynamic-bg-image, .blobs {
+
+            .dynamic-bg-image,
+            .blobs {
                 filter: blur(60px) !important;
                 will-change: transform, opacity;
             }
-            
+
             .blob {
                 animation-duration: 45s;
             }
@@ -1050,9 +1155,11 @@
                 max-width: 600px;
                 padding: 40px;
             }
+
             .visualizer-area {
                 max-height: 360px;
             }
+
             .track-title {
                 font-size: 26px;
             }
@@ -1062,16 +1169,19 @@
             .shell {
                 max-width: 420px;
             }
+
             .btn-glass:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 14px 28px rgba(15, 23, 42, 0.4);
             }
+
             .btn-play:hover {
                 transform: translateY(-2px) scale(1.06);
             }
         }
     </style>
 </head>
+
 <body>
     <div class="dynamic-bg">
         <div class="dynamic-bg-image" id="dynamicBgImage"></div>
@@ -1112,6 +1222,18 @@
                             <span>🌐</span>
                             <span id="wsListenAddrLabel">WS开放地址：当前为默认（正常勿动）</span>
                         </button>
+                        <div class="settings-divider"></div>
+                        <div class="settings-group">
+                            <div class="settings-group-title">歌词字体大小</div>
+                            <div class="font-size-controls">
+                                <button class="font-size-btn" onclick="changeFontSize('tiny')">超小</button>
+                                <button class="font-size-btn" onclick="changeFontSize('small')">小号</button>
+                                <button class="font-size-btn" onclick="changeFontSize('medium')">中等</button>
+                                <button class="font-size-btn" onclick="changeFontSize('large')">大号</button>
+                                <button class="font-size-btn" onclick="changeFontSize('extra-large')">极大</button>
+                                <button class="font-size-btn" onclick="changeFontSize('huge')">超大</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="status-dot">Connected</div>
@@ -1168,11 +1290,14 @@
                     </span>
                 </button>
             </div>
-            
+
             <div class="control-row" style="margin-top: 0; padding: 10px 18px; gap: 8px;">
-                 <input id="ncmIdInput" type="text" placeholder="输入网易云音乐 ID 或分享文本..." style="background:transparent; border:none; outline:none; color:var(--text-main); font-size:13px; width:100%; font-family:inherit;">
-                 <button class="btn-glass" onclick="parseNcmShare()" style="height:32px; width:48px; min-width:48px; border-radius:10px; font-size:12px;">解析</button>
-                 <button class="btn-glass" onclick="playNcmId()" style="height:32px; width:48px; min-width:48px; border-radius:10px; font-size:12px;">播放</button>
+                <input id="ncmIdInput" type="text" placeholder="输入网易云音乐 ID 或分享文本..."
+                    style="background:transparent; border:none; outline:none; color:var(--text-main); font-size:13px; width:100%; font-family:inherit;">
+                <button class="btn-glass" onclick="parseNcmShare()"
+                    style="height:32px; width:48px; min-width:48px; border-radius:10px; font-size:12px;">解析</button>
+                <button class="btn-glass" onclick="playNcmId()"
+                    style="height:32px; width:48px; min-width:48px; border-radius:10px; font-size:12px;">播放</button>
             </div>
         </div>
 
@@ -1331,6 +1456,35 @@
                 wsListenAddr = next;
                 wsListenAddrLabel.textContent = `WS开放地址：${wsListenAddr}`;
                 settingsMenu.classList.remove('show');
+            } catch (e) {
+                alert('Connection error: ' + e);
+            }
+        }
+
+        async function changeFontSize(size) {
+            try {
+                const res = await fetch(`${API_BASE}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: 'setFontSize', size: size }),
+                });
+                if (!res.ok) {
+                    alert('Command failed: ' + res.status);
+                    return;
+                }
+
+                // Update active state in UI
+                document.querySelectorAll('.font-size-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('onclick').includes(`'${size}'`)) {
+                        btn.classList.add('active');
+                    }
+                });
+
+                // Optional: hide settings menu after selection on mobile
+                if (window.innerWidth < 768) {
+                    setTimeout(() => settingsMenu.classList.remove('show'), 300);
+                }
             } catch (e) {
                 alert('Connection error: ' + e);
             }
@@ -1656,7 +1810,7 @@
             const ua = navigator.userAgent;
             const width = window.innerWidth;
             const body = document.body;
-            
+
             body.classList.remove('device-mobile', 'device-tablet', 'device-pc', 'os-ios', 'os-android', 'os-windows', 'os-mac');
 
             const isIOS = /iPad|iPhone|iPod/.test(ua);
@@ -1681,8 +1835,9 @@
             clearTimeout(window.resizeTimer);
             window.resizeTimer = setTimeout(detectDevice, 100);
         });
-        
+
         detectDevice();
     </script>
 </body>
+
 </html>

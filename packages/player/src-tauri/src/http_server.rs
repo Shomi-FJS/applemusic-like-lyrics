@@ -114,6 +114,7 @@ enum RemoteCommand {
     BackwardSong,
     SetVolume { volume: f64 },
     SeekPlayProgress { progress: f64 },
+    SetFontSize { size: String },
 }
 
 #[derive(Deserialize)]
@@ -286,6 +287,7 @@ async fn api_player_command(
             let position = progress.max(0.0);
             send_player_command(amll_player_core::AudioThreadMessage::SeekAudio { position }).await
         }
+        RemoteCommand::SetFontSize { .. } => true,
     };
     if ok {
         StatusCode::OK
