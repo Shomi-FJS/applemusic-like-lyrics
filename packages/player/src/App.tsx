@@ -51,6 +51,23 @@ const hasBackgroundAtom = atom(false);
 
 function App() {
 	const store = useStore();
+
+	useEffect(() => {
+		const showWindow = async () => {
+			try {
+				const { getCurrentWindow } = await import("@tauri-apps/api/window");
+				const win = getCurrentWindow();
+				await win.show();
+			} catch (e) {
+				console.error("Failed to show window:", e);
+			}
+		};
+		showWindow();
+		if (import.meta.env.DEV) {
+			setTimeout(showWindow, 150);
+		}
+	}, []);
+
 	const isLyricPageOpened = useAtomValue(isLyricPageOpenedAtom);
 	const showStatJSFrame = useAtomValue(showStatJSFrameAtom);
 	const musicContextMode = useAtomValue(musicContextModeAtom);
@@ -77,7 +94,9 @@ function App() {
 				};
 
 				const label = sizeLabels[newSize] || newSize;
-				toast.info(`远程控制：歌词大小已设为“${label}”`);
+				toast.info(`远程控制：歌词大小已设为“${label}”`, {
+					containerId: "top-right-toast",
+				});
 			}
 		});
 		return () => {
@@ -244,7 +263,12 @@ function App() {
 							marginBottom: "150px",
 						}}
 					/>
-					<ToastContainer theme="dark" position="top-right" autoClose={1800} />
+					<ToastContainer
+						theme="dark"
+						position="top-right"
+						autoClose={1800}
+						containerId="top-right-toast"
+					/>
 				</Theme>
 			</StrictMode>
 		</>
