@@ -19,9 +19,6 @@ mod player;
 mod screen_capture;
 mod server;
 
-#[cfg(target_os = "windows")]
-mod external_media_controller;
-
 pub type AMLLWebSocketServerWrapper = Arc<RwLock<AMLLWebSocketServer>>;
 pub type AMLLWebSocketServerState<'r> = State<'r, AMLLWebSocketServerWrapper>;
 pub type HttpServerControllerWrapper = Arc<RwLock<http_server::HttpServerController>>;
