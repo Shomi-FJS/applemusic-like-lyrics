@@ -56,6 +56,7 @@ import {
 	type TextProps,
 } from "@radix-ui/themes";
 import { getVersion } from "@tauri-apps/api/app";
+import { invoke } from "@tauri-apps/api/core";
 import { atom, useAtom, useAtomValue, type WritableAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import React, {
