@@ -115,6 +115,7 @@ enum RemoteCommand {
     SetVolume { volume: f64 },
     SeekPlayProgress { progress: f64 },
     SetFontSize { size: String },
+    ToggleTranslation { enabled: bool },
 }
 
 #[derive(Deserialize)]
@@ -288,6 +289,7 @@ async fn api_player_command(
             send_player_command(amll_player_core::AudioThreadMessage::SeekAudio { position }).await
         }
         RemoteCommand::SetFontSize { .. } => true,
+        RemoteCommand::ToggleTranslation { .. } => true,
     };
     if ok {
         StatusCode::OK

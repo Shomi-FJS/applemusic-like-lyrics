@@ -23,10 +23,10 @@ import {
 	LyricSizePreset,
 	lyricSizePresetAtom,
 	onClickAudioQualityTagAtom,
+	enableLyricTranslationLineAtom,
 } from "@applemusic-like-lyrics/react-full";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { toast } from "react-toastify";
 import { StateConnector } from "./components/StateConnector/index.tsx";
 import { StatsComponent } from "./components/StatsComponent/index.tsx";
@@ -95,6 +95,12 @@ function App() {
 
 				const label = sizeLabels[newSize] || newSize;
 				toast.info(`远程控制：歌词大小已设为“${label}”`, {
+					containerId: "top-right-toast",
+				});
+			} else if (payload.command === "toggleTranslation") {
+				const enabled = payload.enabled;
+				store.set(enableLyricTranslationLineAtom, enabled);
+				toast.info(`远程控制：歌词翻译已${enabled ? "开启" : "关闭"}`, {
 					containerId: "top-right-toast",
 				});
 			}

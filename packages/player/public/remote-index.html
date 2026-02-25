@@ -1161,6 +1161,10 @@
                             <span>🌐</span>
                             <span id="wsListenAddrLabel">WS开放地址：当前为默认（正常勿动）</span>
                         </button>
+                        <button class="settings-item" onclick="toggleTranslation()">
+                            <span>📝</span>
+                            <span id="translationLabel">歌曲翻译：开启</span>
+                        </button>
                         <div class="settings-divider"></div>
                         <div class="settings-group">
                             <div class="settings-group-title">歌词字体大小</div>
@@ -1251,6 +1255,7 @@
         const playPauseButton = document.getElementById('playPauseButton');
         const playPauseIcon = document.getElementById('playPauseIcon');
         const alwaysOnTopLabel = document.getElementById('alwaysOnTopLabel');
+        const translationLabel = document.getElementById('translationLabel');
         const wsListenAddrLabel = document.getElementById('wsListenAddrLabel');
         const html = document.documentElement;
         const bodyEl = document.body;
@@ -1267,6 +1272,7 @@
         let lastSubText = '';
         let refreshSeq = 0;
         let alwaysOnTop = false;
+        let translationEnabled = true;
         let wsListenAddr = '';
         let pendingPlayTarget = null;
         let lastToggleAt = 0;
@@ -1369,6 +1375,26 @@
                 alwaysOnTopLabel.textContent = alwaysOnTop ? '窗口置顶：开启' : '窗口置顶：关闭';
                 settingsMenu.classList.remove('show');
                 scheduleRefresh(200);
+            } catch (e) {
+                alert('Connection error: ' + e);
+            }
+        }
+
+        async function toggleTranslation() {
+            const target = !translationEnabled;
+            try {
+                const res = await fetch(`${API_BASE}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: 'toggleTranslation', enabled: target }),
+                });
+                if (!res.ok) {
+                    alert('Command failed: ' + res.status);
+                    return;
+                }
+                translationEnabled = target;
+                translationLabel.textContent = translationEnabled ? '歌曲翻译：开启' : '歌曲翻译：关闭';
+                settingsMenu.classList.remove('show');
             } catch (e) {
                 alert('Connection error: ' + e);
             }
