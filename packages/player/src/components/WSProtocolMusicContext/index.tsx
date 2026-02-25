@@ -31,7 +31,7 @@ import {
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { type FC, useCallback, useEffect, useRef } from "react";
+import { type FC, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
@@ -77,15 +77,6 @@ interface WSImageData {
 	data: string;
 }
 
-interface RemotePlaySongEvent {
-	id: string;
-	source: string;
-}
-
-interface RemoteToggleEvent {
-	enabled: boolean;
-}
-
 type WSAlbumCover =
 	| { source: "uri"; url: string }
 	| { source: "data"; image: WSImageData };
@@ -122,10 +113,6 @@ type WSPayload =
 	| { type: "command"; value: WSCommand }
 	| { type: "state"; value: WSStateUpdate };
 
-type SmtcEvent =
-	| { type: "audioData"; data: number[] }
-	| { type: string; data: unknown };
-
 interface WSProtocolMusicContextProps {
 	isLyricOnly?: boolean;
 }
@@ -140,57 +127,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 	const { t } = useTranslation();
 	const fftPlayer = useRef<FFTPlayer | undefined>(undefined);
 	const fftDataRange = useAtomValue(fftDataRangeAtom);
-	const lastWsAudioDataAt = useRef<number>(0);
-	const isSystemAudioActive = useRef(false);
-
-	const showRemoteNotification = (message: string, autoClose = 1800) => {
-		toast.info(message, { position: "top-right", autoClose });
-	};
-
-	const getRemoteCommandMessage = (command: WSCommand) => {
-		switch (command.command) {
-			case "pause":
-				return t("ws-protocol.remoteCommand.pause", "远程用户执行：暂停");
-			case "resume":
-				return t("ws-protocol.remoteCommand.resume", "远程用户执行：播放");
-			case "forwardSong":
-				return t(
-					"ws-protocol.remoteCommand.forwardSong",
-					"远程用户执行：下一首",
-				);
-			case "backwardSong":
-				return t(
-					"ws-protocol.remoteCommand.backwardSong",
-					"远程用户执行：上一首",
-				);
-			case "setVolume": {
-				const volumeText = `${Math.round(command.volume * 100)}%`;
-				return t(
-					"ws-protocol.remoteCommand.setVolume",
-					"远程用户执行：设置音量 {volume}",
-					{
-						volume: volumeText,
-					},
-				);
-			}
-			case "seekPlayProgress": {
-				const seconds = Math.max(0, Math.floor(command.progress / 1000));
-				return t(
-					"ws-protocol.remoteCommand.seekPlayProgress",
-					"远程用户执行：跳转到 {seconds}s",
-					{ seconds },
-				);
-			}
-			case "setRepeatMode":
-			case "setShuffleMode":
-				return t(
-					"ws-protocol.remoteCommand.playMode",
-					"远程用户执行：调整播放模式",
-				);
-			default:
-				return t("ws-protocol.remoteCommand.unknown", "远程用户执行：执行操作");
-		}
-	};
 
 	useEffect(() => {
 		if (!isLyricOnly) {
@@ -220,97 +156,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			fftPlayer.current = undefined;
 		};
 	}, [fftDataRange, store]);
-
-	const systemAudioUnlistenRef = useRef<(() => void) | null>(null);
-
-	const stopSystemAudio = useCallback(async () => {
-		if (!isSystemAudioActive.current) {
-			return;
-		}
-		isSystemAudioActive.current = false;
-		if (systemAudioUnlistenRef.current) {
-			systemAudioUnlistenRef.current();
-			systemAudioUnlistenRef.current = null;
-		}
-		try {
-			await invoke("control_external_media", {
-				payload: { type: "stopAudioVisualization" },
-			});
-		} catch (error) {
-			console.warn("停止系统音频监听失败:", error);
-		}
-	}, []);
-
-	const startSystemAudio = useCallback(async () => {
-		if (isSystemAudioActive.current) {
-			return;
-		}
-		isSystemAudioActive.current = true;
-		try {
-			const unlistenLocal = await listen<SmtcEvent>("smtc_update", (event) => {
-				if (event.payload.type !== "audioData") {
-					return;
-				}
-				if (!isSystemAudioActive.current) {
-					return;
-				}
-				const lastWsTime = lastWsAudioDataAt.current;
-				if (lastWsTime && Date.now() - lastWsTime < 3000) {
-					return;
-				}
-				if (fftPlayer.current) {
-					const data = event.payload.data as number[];
-					fftPlayer.current.pushDataF32(
-						48000,
-						2,
-						new Float32Array(new Uint8Array(data).buffer),
-					);
-				}
-			});
-
-			if (!isSystemAudioActive.current) {
-				unlistenLocal();
-				return;
-			}
-
-			systemAudioUnlistenRef.current = unlistenLocal;
-			await invoke("control_external_media", {
-				payload: { type: "startAudioVisualization" },
-			});
-		} catch (error) {
-			isSystemAudioActive.current = false;
-			console.warn("启动系统音频监听失败:", error);
-		}
-	}, []);
-
-	useEffect(() => {
-		if (!wsProtocolListenAddr && !isLyricOnly) {
-			return;
-		}
-
-		let timerId: number | null = null;
-
-		const checkFallback = () => {
-			const now = Date.now();
-			const lastWsTime = lastWsAudioDataAt.current;
-			const shouldFallback = !lastWsTime || now - lastWsTime > 3000;
-			if (shouldFallback) {
-				startSystemAudio();
-			} else {
-				stopSystemAudio();
-			}
-			timerId = window.setTimeout(checkFallback, 1000);
-		};
-
-		checkFallback();
-
-		return () => {
-			if (timerId !== null) {
-				clearTimeout(timerId);
-			}
-			stopSystemAudio();
-		};
-	}, [wsProtocolListenAddr, isLyricOnly, startSystemAudio, stopSystemAudio]);
 
 	useEffect(() => {
 		if (!wsProtocolListenAddr && !isLyricOnly) {
@@ -414,75 +259,8 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			},
 		);
 
-		const unlistenRemoteHttp = listen<WSCommand>(
-			"remote-http-command",
-			(evt) => {
-				sendWSCommand(evt.payload);
-				const message = getRemoteCommandMessage(evt.payload);
-				if (message) {
-					showRemoteNotification(message);
-				}
-			},
-		);
-		const unlistenRemotePlaySong = listen<RemotePlaySongEvent>(
-			"remote-play-song",
-			() => {
-				showRemoteNotification(
-					t("ws-protocol.remoteCommand.requestSong", "远程用户执行：点歌"),
-					3000,
-				);
-			},
-		);
-		const unlistenRemoteFullscreen = listen<RemoteToggleEvent>(
-			"remote-fullscreen",
-			(evt) => {
-				const message = evt.payload.enabled
-					? t(
-							"ws-protocol.remoteCommand.fullscreenOn",
-							"远程用户执行：开启全屏",
-						)
-					: t(
-							"ws-protocol.remoteCommand.fullscreenOff",
-							"远程用户执行：退出全屏",
-						);
-				showRemoteNotification(message);
-			},
-		);
-		const unlistenRemoteAlwaysOnTop = listen<RemoteToggleEvent>(
-			"remote-always-on-top",
-			(evt) => {
-				const message = evt.payload.enabled
-					? t(
-							"ws-protocol.remoteCommand.alwaysOnTopOn",
-							"远程用户执行：开启窗口置顶",
-						)
-					: t(
-							"ws-protocol.remoteCommand.alwaysOnTopOff",
-							"远程用户执行：关闭窗口置顶",
-						);
-				showRemoteNotification(message);
-			},
-		);
-
 		let curCoverBlobUrl = "";
-		let remoteCoverUrl = "";
 		const onBodyChannel = new Channel<WSPayload>();
-
-		const emitRemoteNowPlaying = (nextIsPlaying: boolean) => {
-			const title = store.get(musicNameAtom) || "";
-			const album = store.get(musicAlbumNameAtom) || "";
-			const artists = store.get(musicArtistsAtom) || [];
-			const artistNames = artists.map((v) => v.name).join(" / ");
-			invoke("update_remote_now_playing", {
-				info: {
-					title,
-					artist: artistNames,
-					album,
-					isPlaying: nextIsPlaying,
-					cover: remoteCoverUrl || null,
-				},
-			});
-		};
 
 		function onBody(payload: WSPayload) {
 			if (payload.type === "ping") {
@@ -515,17 +293,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						state.artists.map((v) => ({ id: v.id, name: v.name })),
 					);
 					store.set(musicPlayingPositionAtom, 0);
-
-					const artistNames = state.artists.map((v) => v.name).join(" / ");
-					invoke("update_remote_now_playing", {
-						info: {
-							title: state.musicName,
-							artist: artistNames,
-							album: state.albumName,
-							isPlaying: store.get(musicPlayingAtom),
-							cover: remoteCoverUrl || null,
-						},
-					});
 					break;
 				}
 				case "setCover": {
@@ -536,7 +303,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 
 					if (state.source === "uri") {
 						store.set(musicCoverAtom, state.url);
-						remoteCoverUrl = state.url;
 					} else {
 						const { mimeType, data: base64Data } = state.image;
 						const binaryString = atob(base64Data);
@@ -549,9 +315,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						const url = URL.createObjectURL(blob);
 						curCoverBlobUrl = url;
 						store.set(musicCoverAtom, url);
-						remoteCoverUrl = `data:${mimeType};base64,${base64Data}`;
 					}
-					emitRemoteNowPlaying(store.get(musicPlayingAtom));
 					break;
 				}
 				case "setLyric": {
@@ -591,19 +355,13 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 				}
 				case "paused": {
 					store.set(musicPlayingAtom, false);
-					emitRemoteNowPlaying(false);
 					break;
 				}
 				case "resumed": {
 					store.set(musicPlayingAtom, true);
-					emitRemoteNowPlaying(true);
 					break;
 				}
 				case "audioData": {
-					lastWsAudioDataAt.current = Date.now();
-					if (isSystemAudioActive.current) {
-						stopSystemAudio();
-					}
 					fftPlayer.current?.pushDataI16(
 						48000,
 						2,
@@ -644,10 +402,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 		});
 		return () => {
 			unlistenConnected.then((u) => u());
-			unlistenRemoteHttp.then((u) => u());
-			unlistenRemotePlaySong.then((u) => u());
-			unlistenRemoteFullscreen.then((u) => u());
-			unlistenRemoteAlwaysOnTop.then((u) => u());
 			unlistenDisconnected.then((u) => u());
 
 			invoke("ws_close_connection");
@@ -688,7 +442,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 		t,
 		isLyricOnly,
 		setIsLyricPageOpened,
-		stopSystemAudio,
 	]);
 
 	if (isLyricOnly) {
