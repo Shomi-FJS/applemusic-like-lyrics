@@ -45,6 +45,7 @@
 		"dexie-react-hooks": "^4.2.0",
 		"framer-motion": "catalog:",
 		"i18next": "^25.8.13",
+		"i18next-browser-languagedetector": "^8.2.1",
 		"i18next-icu": "^2.4.3",
 		"jotai": "2.18.0",
 		"md5": "^2.3.0",
