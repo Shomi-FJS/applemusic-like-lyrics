@@ -35,6 +35,8 @@ import { type FC, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
+	MusicContextMode,
+	musicContextModeAtom,
 	wsProtocolConnectedAddrsAtom,
 	wsProtocolListenAddrAtom,
 } from "../../states/appAtoms.ts";
@@ -259,8 +261,73 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			},
 		);
 
+		function getRemoteCommandMessage(cmd: WSCommand): string | null {
+			switch (cmd.command) {
+				case "pause":
+					return t("ws-protocol.remoteCommand.pause", "远程用户执行：暂停");
+				case "resume":
+					return t("ws-protocol.remoteCommand.resume", "远程用户执行：继续播放");
+				case "forwardSong":
+					return t("ws-protocol.remoteCommand.next", "远程用户执行：下一首");
+				case "backwardSong":
+					return t("ws-protocol.remoteCommand.prev", "远程用户执行：上一首");
+				case "setVolume":
+					return t("ws-protocol.remoteCommand.volume", "远程用户执行：调整音量");
+				case "seekPlayProgress":
+					return t("ws-protocol.remoteCommand.seek", "远程用户执行：调整进度");
+				case "setRepeatMode":
+					return t("ws-protocol.remoteCommand.repeat", "远程用户执行：切换循环模式");
+				case "setShuffleMode":
+					return t("ws-protocol.remoteCommand.shuffle", "远程用户执行：切换随机模式");
+				default:
+					return null;
+			}
+		}
+
+		function showRemoteNotification(message: string, duration = 2000) {
+			toast.info(message, {
+				containerId: "top-right-toast",
+				autoClose: duration,
+			});
+		}
+
+		const unlistenRemoteHttp = listen<WSCommand>(
+			"remote-http-command",
+			(evt) => {
+				sendWSCommand(evt.payload);
+				const message = getRemoteCommandMessage(evt.payload);
+				if (message) {
+					showRemoteNotification(message);
+				}
+			},
+		);
+
 		let curCoverBlobUrl = "";
 		const onBodyChannel = new Channel<WSPayload>();
+
+		function updateRemoteNowPlaying() {
+			const currentMode = store.get(musicContextModeAtom);
+			if (currentMode !== MusicContextMode.WSProtocol) {
+				return;
+			}
+			const musicName = store.get(musicNameAtom);
+			const musicArtists = store.get(musicArtistsAtom);
+			const musicAlbum = store.get(musicAlbumNameAtom);
+			const musicCover = store.get(musicCoverAtom);
+			const musicPlaying = store.get(musicPlayingAtom);
+
+			invoke("update_remote_now_playing", {
+				info: {
+					title: musicName,
+					artist: musicArtists.map((a) => a.name).join("/"),
+					album: musicAlbum,
+					isPlaying: musicPlaying,
+					cover: musicCover,
+				},
+			}).catch((err) => {
+				console.error("更新远程播放信息失败", err);
+			});
+		}
 
 		function onBody(payload: WSPayload) {
 			if (payload.type === "ping") {
@@ -293,6 +360,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						state.artists.map((v) => ({ id: v.id, name: v.name })),
 					);
 					store.set(musicPlayingPositionAtom, 0);
+					updateRemoteNowPlaying();
 					break;
 				}
 				case "setCover": {
@@ -316,6 +384,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						curCoverBlobUrl = url;
 						store.set(musicCoverAtom, url);
 					}
+					updateRemoteNowPlaying();
 					break;
 				}
 				case "setLyric": {
@@ -355,10 +424,12 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 				}
 				case "paused": {
 					store.set(musicPlayingAtom, false);
+					updateRemoteNowPlaying();
 					break;
 				}
 				case "resumed": {
 					store.set(musicPlayingAtom, true);
+					updateRemoteNowPlaying();
 					break;
 				}
 				case "audioData": {
@@ -403,6 +474,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 		return () => {
 			unlistenConnected.then((u) => u());
 			unlistenDisconnected.then((u) => u());
+			unlistenRemoteHttp.then((u) => u());
 
 			invoke("ws_close_connection");
 

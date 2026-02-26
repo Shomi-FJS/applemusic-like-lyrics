@@ -54,6 +54,8 @@ import {
 	advanceLyricDynamicLyricTimeAtom,
 	audioQualityDialogOpenedAtom,
 	enableMediaControlsAtom,
+	MusicContextMode,
+	musicContextModeAtom,
 } from "../../states/appAtoms.ts";
 import {
 	type AudioQuality,
@@ -601,23 +603,6 @@ export const LocalMusicContext: FC = () => {
 				}
 			}
 			store.set(musicDurationAtom, (data.duration * 1000) | 0);
-
-			const musicName = store.get(musicNameAtom);
-			const musicArtists = store.get(musicArtistsAtom);
-			const musicAlbum = store.get(musicAlbumNameAtom);
-			const musicCover = store.get(musicCoverAtom);
-
-			invoke("update_remote_now_playing", {
-				info: {
-					title: musicName,
-					artist: musicArtists.map((a) => a.name).join("/"),
-					album: musicAlbum,
-					isPlaying: musicPlaying,
-					cover: musicCover,
-				},
-			}).catch((err) => {
-				console.error("更新远程播放信息失败", err);
-			});
 		} catch (error) {
 			console.error(
 				"[syncMusicInfo] An error occurred during state update:",
@@ -760,6 +745,26 @@ export const LocalMusicContext: FC = () => {
 						: status.musicId;
 					if (newMusicId && newMusicId !== currentMusicId) {
 						await syncMusicInfo(status);
+					}
+
+					const currentMode = store.get(musicContextModeAtom);
+					if (currentMode === MusicContextMode.Local) {
+						const musicName = store.get(musicNameAtom);
+						const musicArtists = store.get(musicArtistsAtom);
+						const musicAlbum = store.get(musicAlbumNameAtom);
+						const musicCover = store.get(musicCoverAtom);
+
+						invoke("update_remote_now_playing", {
+							info: {
+								title: musicName,
+								artist: musicArtists.map((a) => a.name).join("/"),
+								album: musicAlbum,
+								isPlaying: status.isPlaying,
+								cover: musicCover,
+							},
+						}).catch((err) => {
+							console.error("更新远程播放信息失败", err);
+						});
 					}
 
 					store.set(musicDurationAtom, (status.duration * 1000) | 0);
