@@ -5,7 +5,7 @@ use ffmpeg_next as ffmpeg;
 use serde::*;
 use serde_json::Value;
 use std::net::SocketAddr;
-use std::sync::{Arc, LazyLock};
+use std::sync::{Arc, LazyLock, RwLock as StdRwLock};
 use tauri::ipc::Channel;
 use tauri::{
     AppHandle, Manager, PhysicalSize, Runtime, Size, State, WebviewWindowBuilder,
@@ -76,12 +76,14 @@ pub struct RemoteNowPlayingInfo {
     pub cover: Option<String>,
 }
 
-pub static REMOTE_NOW_PLAYING: LazyLock<RwLock<Option<RemoteNowPlayingInfo>>> =
-    LazyLock::new(|| RwLock::new(None));
+pub static REMOTE_NOW_PLAYING: LazyLock<StdRwLock<Option<RemoteNowPlayingInfo>>> =
+    LazyLock::new(|| StdRwLock::new(None));
 
 #[tauri::command]
 async fn update_remote_now_playing(info: RemoteNowPlayingInfo) {
-    *REMOTE_NOW_PLAYING.write().await = Some(info);
+    if let Ok(mut guard) = REMOTE_NOW_PLAYING.write() {
+        guard.replace(info);
+    }
 }
 
 #[tauri::command]
@@ -411,11 +413,8 @@ pub fn run() {
             player::set_media_controls_enabled,
             read_local_music_metadata,
             restart_app,
-<<<<<<< HEAD
             reset_window_theme,
             get_local_ips,
-=======
->>>>>>> upstream/full-refractor
         ])
         .setup(|app| {
             player::init_local_player(app.handle().clone());

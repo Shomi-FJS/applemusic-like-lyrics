@@ -193,7 +193,8 @@ fn emit_remote_command(state: &HttpServerState, cmd: &RemoteCommand) {
 }
 
 async fn api_now_playing(State(state): State<HttpServerState>) -> Response {
-    if let Some(info) = REMOTE_NOW_PLAYING.read().await.clone() {
+    let info = REMOTE_NOW_PLAYING.read().ok().and_then(|guard| guard.clone());
+    if let Some(info) = info {
         let always_on_top = state
             .app
             .get_webview_window("main")

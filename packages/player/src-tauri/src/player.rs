@@ -96,14 +96,24 @@ async fn local_player_main<R: Runtime>(app: AppHandle<R>, stream: OutputStream) 
                         Some(format!("data:{media_type};base64,{base64}"))
                     });
                     let snapshot = NowPlayingSnapshot {
-                        title: music_info.name,
-                        artist: music_info.artist,
-                        album: music_info.album,
+                        title: music_info.name.clone(),
+                        artist: music_info.artist.clone(),
+                        album: music_info.album.clone(),
                         is_playing,
                         cover_data_url,
                     };
                     if let Ok(mut guard) = NOW_PLAYING.write() {
-                        guard.replace(snapshot);
+                        guard.replace(snapshot.clone());
+                    }
+                    let remote_info = crate::RemoteNowPlayingInfo {
+                        title: music_info.name,
+                        artist: music_info.artist,
+                        album: music_info.album,
+                        is_playing,
+                        cover: snapshot.cover_data_url,
+                    };
+                    if let Ok(mut guard) = crate::REMOTE_NOW_PLAYING.write() {
+                        guard.replace(remote_info);
                     }
                 }
             }

@@ -48,6 +48,7 @@ import md5 from "md5";
 import { type FC, useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { invoke } from "@tauri-apps/api/core";
 import { db } from "../../dexie.ts";
 import {
 	advanceLyricDynamicLyricTimeAtom,
@@ -600,6 +601,23 @@ export const LocalMusicContext: FC = () => {
 				}
 			}
 			store.set(musicDurationAtom, (data.duration * 1000) | 0);
+
+			const musicName = store.get(musicNameAtom);
+			const musicArtists = store.get(musicArtistsAtom);
+			const musicAlbum = store.get(musicAlbumNameAtom);
+			const musicCover = store.get(musicCoverAtom);
+
+			invoke("update_remote_now_playing", {
+				info: {
+					title: musicName,
+					artist: musicArtists.map((a) => a.name).join("/"),
+					album: musicAlbum,
+					isPlaying: musicPlaying,
+					cover: musicCover,
+				},
+			}).catch((err) => {
+				console.error("更新远程播放信息失败", err);
+			});
 		} catch (error) {
 			console.error(
 				"[syncMusicInfo] An error occurred during state update:",
