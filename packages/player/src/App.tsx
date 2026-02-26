@@ -123,7 +123,7 @@ function App() {
 
 	useLayoutEffect(() => {
 		i18n.changeLanguage(displayLanguage);
-	}, [i18n, displayLanguage]);
+	}, [displayLanguage]);
 
 	return (
 		<>
