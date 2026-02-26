@@ -6,6 +6,7 @@ import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import { Trans, useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { loadedExtensionAtom } from "../../states/extensionsAtoms";
+import { toError } from "../../utils/error";
 
 const ErrorCallout: FC<
 	FallbackProps & {
@@ -13,6 +14,8 @@ const ErrorCallout: FC<
 		id: string;
 	}
 > = ({ error, id, injectPointName }) => {
+	const normalizedError = toError(error);
+
 	return (
 		<Callout.Root>
 			<Callout.Icon>
@@ -24,7 +27,7 @@ const ErrorCallout: FC<
 						扩展程序 {id} 在注入组件 / 功能到 {injectPointName} 槽位时发生错误：
 					</Trans>
 				</div>
-				<div>{error}</div>
+				<div>{normalizedError.message}</div>
 			</Callout.Text>
 		</Callout.Root>
 	);

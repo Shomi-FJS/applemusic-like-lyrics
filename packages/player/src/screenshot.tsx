@@ -6,18 +6,21 @@ import "react-toastify/dist/ReactToastify.css";
 import "./i18n.ts";
 import "./styles.css";
 import "./utils/player.ts";
-// import "./utils/merge-raf.ts";
 import { ScreenshotApp } from "./pages/screenshot/index.tsx";
+import { toError } from "./utils/error.ts";
 
 const ErrorRender = (props: FallbackProps) => {
 	console.error(props.error);
+	const normalizedError = toError(props.error);
+
 	return (
 		<div>
 			<h2>An unrecoverable error has occured</h2>
 			<code>
 				<pre>
-					{props.error.message}
-					{props.error.stack}
+					{normalizedError.message}
+					{"\n"}
+					{normalizedError.stack}
 				</pre>
 			</code>
 		</div>

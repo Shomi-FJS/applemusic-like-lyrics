@@ -1,20 +1,18 @@
 import { Box, Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
-import { platform, version } from "@tauri-apps/plugin-os";
 import classNames from "classnames";
-import { atom, useAtomValue, useStore } from "jotai";
-import { lazy, StrictMode, Suspense, useEffect, useLayoutEffect } from "react";
+import { useAtomValue, useStore } from "jotai";
+import { lazy, StrictMode, Suspense, useLayoutEffect, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import semverGt from "semver/functions/gt";
 import styles from "./App.module.css";
 import { AppContainer } from "./components/AppContainer/index.tsx";
-import { DarkThemeDetector } from "./components/DarkThemeDetector/index.tsx";
 import { ExtensionInjectPoint } from "./components/ExtensionInjectPoint/index.tsx";
 import { LocalMusicContext } from "./components/LocalMusicContext/index.tsx";
 import { NowPlayingBar } from "./components/NowPlayingBar/index.tsx";
 import { ShotcutContext } from "./components/ShotcutContext/index.tsx";
+import { ThemeManager } from "./components/ThemeManager/index.tsx";
 import { UpdateContext } from "./components/UpdateContext/index.tsx";
 import { WSProtocolMusicContext } from "./components/WSProtocolMusicContext/index.tsx";
 import "./i18n";
@@ -32,22 +30,19 @@ import { StateConnector } from "./components/StateConnector/index.tsx";
 import { StatsComponent } from "./components/StatsComponent/index.tsx";
 import { router } from "./router.tsx";
 import {
-	audioQualityDialogOpenedAtom,
-	DarkMode,
-	darkModeAtom,
 	displayLanguageAtom,
 	enableAlwaysOnTopAtom,
 	enableHttpServerAtom,
+	hasBackgroundAtom,
 	isDarkThemeAtom,
 	MusicContextMode,
 	musicContextModeAtom,
 	showStatJSFrameAtom,
 } from "./states/appAtoms.ts";
+import { useInitializeWindow } from "./utils/useInitializeWindow.ts";
 
 const ExtensionContext = lazy(() => import("./components/ExtensionContext"));
 const AMLLWrapper = lazy(() => import("./components/AMLLWrapper"));
-
-const hasBackgroundAtom = atom(false);
 
 function App() {
 	const store = useStore();
@@ -110,43 +105,7 @@ function App() {
 		};
 	}, [store]);
 
-	const darkMode = useAtomValue(darkModeAtom);
-
-	const lyricSize = useAtomValue(lyricSizePresetAtom);
-
-	useEffect(() => {
-		const syncThemeToWindow = async () => {
-			if (darkMode === DarkMode.Auto) {
-				await invoke("reset_window_theme").catch((err) => {
-					console.error("重置主题失败:", err);
-				});
-			} else {
-				const { getCurrentWindow } = await import("@tauri-apps/api/window");
-				const appWindow = getCurrentWindow();
-				const finalTheme = darkMode === DarkMode.Dark ? "dark" : "light";
-				await appWindow.setTheme(finalTheme);
-			}
-		};
-		syncThemeToWindow();
-	}, [darkMode]);
-
-	useEffect(() => {
-		const initializeWindow = async () => {
-			if ((window as any).__AMLL_PLAYER_INITIALIZED__) return;
-			(window as any).__AMLL_PLAYER_INITIALIZED__ = true;
-
-			setTimeout(async () => {
-				const { getCurrentWindow } = await import("@tauri-apps/api/window");
-				const appWindow = getCurrentWindow();
-				if (platform() === "windows" && !semverGt(version(), "10.0.22000")) {
-					store.set(hasBackgroundAtom, true);
-					await appWindow.clearEffects();
-				}
-				await appWindow.show();
-			}, 50);
-		};
-		initializeWindow();
-	}, [store]);
+	useInitializeWindow();
 
 	useEffect(() => {
 		const enabled = store.get(enableHttpServerAtom);
@@ -163,59 +122,8 @@ function App() {
 	}, [store]);
 
 	useLayoutEffect(() => {
-		console.log("displayLanguage", displayLanguage, i18n);
 		i18n.changeLanguage(displayLanguage);
 	}, [i18n, displayLanguage]);
-
-	useEffect(() => {
-		store.set(onClickAudioQualityTagAtom, {
-			onEmit() {
-				store.set(audioQualityDialogOpenedAtom, true);
-			},
-		});
-	}, [store]);
-
-	useEffect(() => {
-		let fontSizeFormula = "";
-		switch (lyricSize) {
-			case LyricSizePreset.Tiny:
-				fontSizeFormula = "max(max(2.5vh, 1.25vw), 10px)";
-				break;
-			case LyricSizePreset.ExtraSmall:
-				fontSizeFormula = "max(max(3vh, 1.5vw), 10px)";
-				break;
-			case LyricSizePreset.Small:
-				fontSizeFormula = "max(max(4vh, 2vw), 12px)";
-				break;
-			case LyricSizePreset.Large:
-				fontSizeFormula = "max(max(6vh, 3vw), 16px)";
-				break;
-			case LyricSizePreset.ExtraLarge:
-				fontSizeFormula = "max(max(7vh, 3.5vw), 18px)";
-				break;
-			case LyricSizePreset.Huge:
-				fontSizeFormula = "max(max(8vh, 4vw), 20px)";
-				break;
-			default:
-				fontSizeFormula = "max(max(5vh, 2.5vw), 14px)";
-				break;
-		}
-
-		const styleId = "amll-font-size-style";
-		let styleTag = document.getElementById(styleId);
-
-		if (!styleTag) {
-			styleTag = document.createElement("style");
-			styleTag.id = styleId;
-			document.head.appendChild(styleTag);
-		}
-
-		styleTag.innerHTML = `
-            .amll-lyric-player {
-                font-size: ${fontSizeFormula} !important;
-            }
-        `;
-	}, [lyricSize]);
 
 	return (
 		<>
@@ -233,7 +141,7 @@ function App() {
 
 			<UpdateContext />
 			<ShotcutContext />
-			<DarkThemeDetector />
+			<ThemeManager />
 			<Suspense>
 				<ExtensionContext />
 			</Suspense>

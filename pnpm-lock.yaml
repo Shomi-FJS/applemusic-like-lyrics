@@ -114,6 +114,9 @@ importers:
       '@applemusic-like-lyrics/lyric':
         specifier: ^0.3.0
         version: 0.3.0
+      '@applemusic-like-lyrics/ttml':
+        specifier: workspace:^
+        version: link:../ttml
       '@biomejs/biome':
         specifier: 'catalog:'
         version: 2.4.4
@@ -12845,7 +12848,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.17':
     dependencies:
-      '@babel/parser': 7.27.7
+      '@babel/parser': 7.29.0
       '@vue/shared': 3.5.17
       entities: 4.5.0
       estree-walker: 2.0.2

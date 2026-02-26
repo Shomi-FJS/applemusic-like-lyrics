@@ -1,4 +1,4 @@
-import type { LyricLine } from "@applemusic-like-lyrics/lyric";
+import type { LyricLine } from "@applemusic-like-lyrics/core";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 

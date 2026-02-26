@@ -7,17 +7,20 @@ import App from "./App.tsx";
 import "./i18n";
 import "./styles.css";
 import "./utils/player";
-// import "./utils/merge-raf";
+import { toError } from "./utils/error.ts";
 
 const ErrorRender = (props: FallbackProps) => {
 	console.error(props.error);
+	const normalizedError = toError(props.error);
+
 	return (
 		<div>
 			<h2>An unrecoverable error has occured</h2>
 			<code>
 				<pre>
-					{props.error.message}
-					{props.error.stack}
+					{normalizedError.message}
+					{"\n"}
+					{normalizedError.stack}
 				</pre>
 			</code>
 		</div>

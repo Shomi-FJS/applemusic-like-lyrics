@@ -419,7 +419,25 @@ export class LyricLineEl extends LyricLineBase {
 		roman.innerText = this.lyricLine.romanLyric;
 	}
 
-	private createWord(word: LyricWord, shouldEmphasize: boolean): RealWord {
+	private getRubyCharCount(word: LyricWord) {
+		return (word.ruby ?? []).reduce(
+			(total, ruby) => total + ruby.word.length,
+			0,
+		);
+	}
+
+	private getRubySegments(word: LyricWord) {
+		return (word.ruby ?? []).filter(
+			(ruby) => (ruby?.word?.trim().length ?? 0) > 0,
+		);
+	}
+
+	private createWord(
+		word: LyricWord,
+		shouldEmphasize: boolean,
+		hasRubyLine: boolean,
+		hasRomanLine: boolean,
+	): RealWord {
 		const mainWordEl = document.createElement("span");
 		const subElements: HTMLSpanElement[] = [];
 
@@ -509,7 +527,7 @@ export class LyricLineEl extends LyricLineBase {
 				continue;
 			}
 
-			const realWord = this.createWord(word, emp);
+			const realWord = this.createWord(word, emp, false, false);
 
 			if (emp) {
 				characterElements.push(...realWord.subElements);

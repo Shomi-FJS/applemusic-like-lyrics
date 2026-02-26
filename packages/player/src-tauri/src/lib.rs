@@ -411,8 +411,11 @@ pub fn run() {
             player::set_media_controls_enabled,
             read_local_music_metadata,
             restart_app,
+<<<<<<< HEAD
             reset_window_theme,
             get_local_ips,
+=======
+>>>>>>> upstream/full-refractor
         ])
         .setup(|app| {
             player::init_local_player(app.handle().clone());
