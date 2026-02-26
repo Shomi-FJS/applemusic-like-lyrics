@@ -11,7 +11,7 @@
 		"preview": "vite preview",
 		"tauri": "tauri",
 		"preinstall": "npx only-allow pnpm",
-		"locale:gen": "i18next --fail-on-warnings 'src/**/*.{ts,tsx}'"
+		"locale:gen": "i18next-cli extract"
 	},
 	"dependencies": {
 		"@applemusic-like-lyrics/core": "workspace:^",
@@ -80,7 +80,7 @@
 		"@types/w3c-image-capture": "^1.0.11",
 		"@vitejs/plugin-react": "catalog:",
 		"@vitejs/plugin-react-swc": "^4.2.3",
-		"i18next-parser": "^9.4.0",
+		"i18next-cli": "^1.46.0",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-babel": "^1.5.1",
