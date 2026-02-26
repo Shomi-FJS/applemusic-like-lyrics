@@ -297,7 +297,8 @@ function SliderSettings<T extends number | number[]>({
 }
 
 const GeneralSettings = () => {
-	const { t, i18n } = useTranslation();
+	const { t } = useTranslation();
+	const i18n = useTranslation();
 	const [mode, setMode] = useAtom(darkModeAtom);
 	const [localIps, setLocalIps] = useState<string[]>([]);
 
@@ -328,14 +329,20 @@ const GeneralSettings = () => {
 			return result;
 		}
 
+		if (!i18n.options?.resources) {
+			return [];
+		}
+
 		const originalLocaleKeyNum = collectLocaleKey(
 			i18n.options.resources?.["zh-CN"] ?? {},
 		).size;
-		const menu = Object.keys(i18n.options.resources ?? {})
+
+		return Object.keys(i18n.options.resources ?? {})
 			.map((langId) => {
+				const resources = i18n.options.resources?.[langId] ?? {};
 				return {
 					langId,
-					keyNum: collectLocaleKey(i18n.options.resources?.[langId] ?? {}).size,
+					keyNum: collectLocaleKey(resources).size,
 				};
 			})
 			.filter(({ keyNum }) => keyNum)
@@ -355,12 +362,7 @@ const GeneralSettings = () => {
 					value: langId,
 				};
 			});
-		menu.push({
-			label: t("page.settings.general.displayLanguage.cimode", "本地化 ID"),
-			value: "cimode",
-		});
-		return menu;
-	}, [t, i18n.language, i18n.options.resources]);
+	}, [i18n.language]);
 
 	const themeMenu = useMemo(
 		() => [

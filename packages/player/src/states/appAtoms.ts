@@ -114,11 +114,7 @@ export const amllMenuOpenedAtom = atom(false);
 export const hideNowPlayingBarAtom = atom(false);
 
 export const wsProtocolConnectedAddrsAtom = atom(new Set<string>());
-
 export const isCheckingUpdateAtom = atom(false);
-
 export const updateInfoAtom = atom<Update | false>(false);
-
 export const autoUpdateAtom = atomWithStorage("amll-player.autoUpdate", true);
-
 export const audioQualityDialogOpenedAtom = atom(false);
