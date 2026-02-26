@@ -316,6 +316,10 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			const musicCover = store.get(musicCoverAtom);
 			const musicPlaying = store.get(musicPlayingAtom);
 
+			if (!musicName || musicName === "等待连接中") {
+				return;
+			}
+
 			invoke("update_remote_now_playing", {
 				info: {
 					title: musicName,

@@ -754,6 +754,10 @@ export const LocalMusicContext: FC = () => {
 						const musicAlbum = store.get(musicAlbumNameAtom);
 						const musicCover = store.get(musicCoverAtom);
 
+						if (!musicName || musicName === "") {
+							return;
+						}
+
 						invoke("update_remote_now_playing", {
 							info: {
 								title: musicName,
