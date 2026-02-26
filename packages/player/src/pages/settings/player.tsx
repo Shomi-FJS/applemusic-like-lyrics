@@ -55,7 +55,6 @@ import {
 	type TextProps,
 } from "@radix-ui/themes";
 import { getVersion } from "@tauri-apps/api/app";
-import { invoke } from "@tauri-apps/api/core";
 import { atom, useAtom, useAtomValue, type WritableAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import React, {
@@ -74,8 +73,6 @@ import {
 	advanceLyricDynamicLyricTimeAtom,
 	DarkMode,
 	darkModeAtom,
-	enableAlwaysOnTopAtom,
-	enableHttpServerAtom,
 	enableMediaControlsAtom,
 	showStatJSFrameAtom,
 	updateInfoAtom,
@@ -202,7 +199,7 @@ const LyricFontSetting: FC = () => {
 					</Text>
 					<Text as="div" color="gray" size="2" className={styles.desc}>
 						<Trans i18nKey="page.settings.lyricFont.fontWeight.description">
-							等同于 CSS 的 font-weight 属性，设置 0 为默认
+							等同于 CSS 的 font-weight 属性，设置 0 为系统控制，推荐值 600
 						</Trans>
 					</Text>
 				</Flex>
@@ -297,16 +294,8 @@ function SliderSettings<T extends number | number[]>({
 }
 
 const GeneralSettings = () => {
-	const { t } = useTranslation();
-	const i18n = useTranslation();
+	const { t, i18n } = useTranslation();
 	const [mode, setMode] = useAtom(darkModeAtom);
-	const [localIps, setLocalIps] = useState<string[]>([]);
-
-	useLayoutEffect(() => {
-		invoke<string[]>("get_local_ips")
-			.then(setLocalIps)
-			.catch(console.error);
-	}, []);
 
 	const supportedLanguagesMenu = useMemo(() => {
 		function collectLocaleKey(
@@ -329,24 +318,15 @@ const GeneralSettings = () => {
 			return result;
 		}
 
-		if (!i18n.options?.resources) {
-			return [];
-		}
-
-		const originalLocaleKeyNum = collectLocaleKey(
-			i18n.options.resources?.["zh-CN"] ?? {},
-		).size;
-
-		return Object.keys(i18n.options.resources ?? {})
+		const menu = Object.keys(i18n.options.resources ?? {})
 			.map((langId) => {
-				const resources = i18n.options.resources?.[langId] ?? {};
 				return {
 					langId,
-					keyNum: collectLocaleKey(resources).size,
+					keyNum: collectLocaleKey(i18n.options.resources?.[langId] ?? {}).size,
 				};
 			})
 			.filter(({ keyNum }) => keyNum)
-			.map(({ langId, keyNum }) => {
+			.map(({ langId }) => {
 				const name =
 					new Intl.DisplayNames(i18n.language, {
 						type: "language",
@@ -356,13 +336,16 @@ const GeneralSettings = () => {
 						type: "language",
 					}).of(langId) || langId;
 				return {
-					label: `${origName === name ? origName : `${origName} (${name})`} (${(
-						(keyNum / originalLocaleKeyNum) * 100
-					).toFixed(1)}%)`,
+					label: origName === name ? origName : `${origName} (${name})`,
 					value: langId,
 				};
 			});
-	}, [i18n.language]);
+		menu.push({
+			label: t("page.settings.general.displayLanguage.cimode", "本地化 ID"),
+			value: "cimode",
+		});
+		return menu;
+	}, [t, i18n.language, i18n.options.resources]);
 
 	const themeMenu = useMemo(
 		() => [
@@ -419,28 +402,6 @@ const GeneralSettings = () => {
 					</Select.Content>
 				</Select.Root>
 			</SettingEntry>
-			<SwitchSettings
-				label={t(
-					"page.settings.general.remoteHttpServer.label",
-					"启用 13533 端口控制服务",
-				)}
-				description={`${t(
-					"page.settings.general.remoteHttpServer.description",
-					"用于远程控制页面与 HTTP 接口，关闭后无法通过 13533 访问",
-				)}${localIps.length > 0 ? `\n本机 IP:\n${localIps.join("\n")}` : ""}`}
-				configAtom={enableHttpServerAtom}
-			/>
-			<SwitchSettings
-				label={t(
-					"page.settings.general.windowAlwaysOnTop.label",
-					"启用窗口置顶",
-				)}
-				description={t(
-					"page.settings.general.windowAlwaysOnTop.description",
-					"将应用窗口设置为始终置顶",
-				)}
-				configAtom={enableAlwaysOnTopAtom}
-			/>
 		</>
 	);
 };
@@ -580,7 +541,7 @@ const LyricAppearanceSettings = () => {
 			{
 				label: t(
 					"page.settings.lyricAppearance.lyricFontSize.menu.large",
-					"大(推荐)",
+					"大",
 				),
 				value: LyricSizePreset.Large,
 			},
