@@ -754,21 +754,19 @@ export const LocalMusicContext: FC = () => {
 						const musicAlbum = store.get(musicAlbumNameAtom);
 						const musicCover = store.get(musicCoverAtom);
 
-						if (!musicName || musicName === "") {
-							return;
+						if (musicName && musicArtists.length > 0) {
+							invoke("update_remote_now_playing", {
+								info: {
+									title: musicName,
+									artist: musicArtists.map((a) => a.name).join("/"),
+									album: musicAlbum,
+									isPlaying: status.isPlaying,
+									cover: musicCover,
+								},
+							}).catch((err) => {
+								console.error("更新远程播放信息失败", err);
+							});
 						}
-
-						invoke("update_remote_now_playing", {
-							info: {
-								title: musicName,
-								artist: musicArtists.map((a) => a.name).join("/"),
-								album: musicAlbum,
-								isPlaying: status.isPlaying,
-								cover: musicCover,
-							},
-						}).catch((err) => {
-							console.error("更新远程播放信息失败", err);
-						});
 					}
 
 					store.set(musicDurationAtom, (status.duration * 1000) | 0);

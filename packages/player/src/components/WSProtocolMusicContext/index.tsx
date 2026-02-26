@@ -316,7 +316,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			const musicCover = store.get(musicCoverAtom);
 			const musicPlaying = store.get(musicPlayingAtom);
 
-			if (!musicName || musicName === "等待连接中") {
+			if (!musicName || musicName === "等待连接中" || musicArtists.length === 0) {
 				return;
 			}
 
