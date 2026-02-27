@@ -54,7 +54,7 @@ import {
 	TextField,
 	type TextProps,
 } from "@radix-ui/themes";
-import { getVersion } from "@tauri-apps/api/app";
+import { getVersion, invoke } from "@tauri-apps/api/app";
 import { atom, useAtom, useAtomValue, type WritableAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import React, {
@@ -298,6 +298,13 @@ function SliderSettings<T extends number | number[]>({
 const GeneralSettings = () => {
 	const { t, i18n } = useTranslation();
 	const [mode, setMode] = useAtom(darkModeAtom);
+	const [localIps, setLocalIps] = useState<string[]>([]);
+
+	useLayoutEffect(() => {
+		invoke<string[]>("get_local_ips")
+			.then(setLocalIps)
+			.catch(console.error);
+	}, []);
 
 	const supportedLanguagesMenu = useMemo(() => {
 		function collectLocaleKey(
@@ -404,6 +411,28 @@ const GeneralSettings = () => {
 					</Select.Content>
 				</Select.Root>
 			</SettingEntry>
+			<SwitchSettings
+				label={t(
+					"page.settings.general.remoteHttpServer.label",
+					"启用 13533 端口控制服务",
+				)}
+				description={`${t(
+					"page.settings.general.remoteHttpServer.description",
+					"用于远程控制页面与 HTTP 接口，关闭后无法通过 13533 访问",
+				)}${localIps.length > 0 ? `\n本机 IP:\n${localIps.join("\n")}` : ""}`}
+				configAtom={enableHttpServerAtom}
+			/>
+			<SwitchSettings
+				label={t(
+					"page.settings.general.windowAlwaysOnTop.label",
+					"启用窗口置顶",
+				)}
+				description={t(
+					"page.settings.general.windowAlwaysOnTop.description",
+					"将应用窗口设置为始终置顶",
+				)}
+				configAtom={enableAlwaysOnTopAtom}
+			/>
 		</>
 	);
 };
@@ -1045,28 +1074,6 @@ const OthersSettings = () => {
 					"可以看到帧率、帧时间、内存占用（仅 Chromuim 系）等信息，对性能影响较小。",
 				)}
 				configAtom={showStatJSFrameAtom}
-			/>
-			<SwitchSettings
-				label={t(
-					"page.settings.others.enableHttpServer.label",
-					"启用远程控制服务",
-				)}
-				description={t(
-					"page.settings.others.enableHttpServer.description",
-					"启用 13533 端口的 HTTP 服务，提供远程控制页面与 REST API",
-				)}
-				configAtom={enableHttpServerAtom}
-			/>
-			<SwitchSettings
-				label={t(
-					"page.settings.others.enableAlwaysOnTop.label",
-					"窗口置顶",
-				)}
-				description={t(
-					"page.settings.others.enableAlwaysOnTop.description",
-					"让窗口始终显示在最上层",
-				)}
-				configAtom={enableAlwaysOnTopAtom}
 			/>
 			<SwitchSettings
 				label={t(
