@@ -87,6 +87,7 @@ yarn lerna run build --scope "@applemusic-like-lyrics/*" # Production build
 ## Acknowledgements
 
 -   [woshizja/sound-processor](https://github.com/woshizja/sound-processor)
+-   [FFmpeg](http://ffmpeg.org/)
 -   And many other frameworks and libraries used by AMLL, thank you very much!
 
 ### Special Thanks
