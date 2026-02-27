@@ -395,7 +395,9 @@ export class LyricLineEl extends LyricLineBase {
 		const roman = this.element.children[2] as HTMLDivElement;
 		// 如果是非动态歌词，那么就不需要分词了
 		if (this.lyricPlayer._getIsNonDynamic()) {
-			main.innerText = this.lyricLine.words.map((w) => w.word).join("");
+			main.innerText = this.lyricLine.words
+				.map((w) => this.lyricPlayer.processObsceneWord(w))
+				.join("");
 			trans.innerText = this.lyricLine.translatedLyric;
 			roman.innerText = this.lyricLine.romanLyric;
 			return;
@@ -440,7 +442,7 @@ export class LyricLineEl extends LyricLineBase {
 						emp,
 						hasRubyLine,
 						hasRomanLine,
-						word.word,
+						this.lyricPlayer.processObsceneWord(word),
 					);
 					if (emp) {
 						characterElements.push(...subElements);
@@ -493,7 +495,7 @@ export class LyricLineEl extends LyricLineBase {
 					emp,
 					hasRubyLine,
 					hasRomanLine,
-					chunk.word.trim(),
+					this.lyricPlayer.processObsceneWord(chunk).trim(),
 				);
 				const realWord: RealWord = {
 					...chunk,

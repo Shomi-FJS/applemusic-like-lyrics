@@ -77,6 +77,10 @@ export interface LyricPlayerProps {
 	 */
 	maskObsceneWordsMode?: MaskObsceneWordsMode;
 	/**
+	 * 设置不雅用语掩码使用的字符，默认为 `*`
+	 */
+	maskObsceneWordChar?: string;
+	/**
 	 * 设置当前播放歌词，要注意传入后这个数组内的信息不得修改，否则会发生错误
 	 */
 	lyricLines?: LyricLine[];
@@ -173,6 +177,7 @@ export const LyricPlayer = forwardRef<
 			enableBlur,
 			enableScale,
 			maskObsceneWordsMode,
+			maskObsceneWordChar,
 			hidePassedLines,
 			lyricLines,
 			currentTime,
@@ -310,6 +315,12 @@ export const LyricPlayer = forwardRef<
 				corePlayer?.setMaskObsceneWords(MaskObsceneWordsMode.Disabled);
 			}
 		}, [corePlayer, maskObsceneWordsMode]);
+
+		useEffect(() => {
+			if (maskObsceneWordChar !== undefined) {
+				corePlayer?.setMaskObsceneWordChar(maskObsceneWordChar);
+			}
+		}, [corePlayer, maskObsceneWordChar]);
 
 		useEffect(() => {
 			if (onLyricLineClick) {

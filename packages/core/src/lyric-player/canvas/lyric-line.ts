@@ -73,7 +73,15 @@ export class CanvasLyricLine extends LyricLineBase {
 			}
 		}
 		this.layoutWords = [
-			[...layoutLine(ctx, this.line.words.map((w) => w.word).join(""), config)],
+			[
+				...layoutLine(
+					ctx,
+					this.line.words
+						.map((w) => this.player.processObsceneWord(w))
+						.join(""),
+					config,
+				),
+			],
 		];
 		this.player.setFontSize(0.5);
 		this.translatedLayoutWords = [

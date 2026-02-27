@@ -46,6 +46,7 @@ export abstract class LyricPlayerBase
 	protected enableBlur = true;
 	protected enableScale = true;
 	protected maskObsceneWords = MaskObsceneWordsMode.Disabled;
+	protected maskObsceneWordChar = "*";
 	protected hidePassedLines = false;
 	protected scrollBoundary = [0, 0];
 	protected currentLyricLineObjects: LyricLineBase[] = [];
@@ -399,8 +400,11 @@ export abstract class LyricPlayerBase
 		this.enableBlur = enable;
 		this.calcLayout();
 	}
+
 	/**
 	 * 设置歌词中不雅用语的掩码模式
+	 * @param mode 掩码模式
+	 * @see {@link MaskObsceneWordsMode}
 	 */
 	setMaskObsceneWords(mode: MaskObsceneWordsMode) {
 		if (this.maskObsceneWords === mode) return;
@@ -408,6 +412,21 @@ export abstract class LyricPlayerBase
 		this.rebuildLyricLines();
 		this.calcLayout();
 	}
+
+	/**
+	 * 设置不雅用语掩码使用的字符，默认为 `*`
+	 * @param char 单个字符，用于替换不雅用语中的字符
+	 */
+	setMaskObsceneWordChar(char: string) {
+		const c = char.charAt(0) || "*";
+		if (this.maskObsceneWordChar === c) return;
+		this.maskObsceneWordChar = c;
+		if (this.maskObsceneWords !== MaskObsceneWordsMode.Disabled) {
+			this.rebuildLyricLines();
+			this.calcLayout();
+		}
+	}
+
 	rebuildLyricLines() {
 		for (const lineObj of this.currentLyricLineObjects) {
 			lineObj.rebuildElement();
@@ -419,12 +438,39 @@ export abstract class LyricPlayerBase
 	 * @internal
 	 */
 	processObsceneWord(word: LyricWord): string {
-		if (!word.obscene) return word.word;
-		if (this.maskObsceneWords === MaskObsceneWordsMode.Disabled)
-			return word.word;
-		if (this.maskObsceneWords === MaskObsceneWordsMode.FullMask)
-			return word.word.replace(/\S/g, "#");
-		return word.word;
+		const text = word.word;
+
+		if (
+			!word.obscene ||
+			this.maskObsceneWords === MaskObsceneWordsMode.Disabled
+		) {
+			return text;
+		}
+
+		const maskChar = this.maskObsceneWordChar;
+
+		if (this.maskObsceneWords === MaskObsceneWordsMode.FullMask) {
+			return text.replace(/\S/g, maskChar);
+		}
+
+		if (this.maskObsceneWords === MaskObsceneWordsMode.PartialMask) {
+			const trimmed = text.trim();
+
+			if (trimmed.length <= 2) {
+				return text.replace(/\S/g, maskChar);
+			}
+
+			const startPos = text.indexOf(trimmed);
+			const endPos = startPos + trimmed.length - 1;
+
+			return (
+				text.slice(0, startPos + 1) +
+				text.slice(startPos + 1, endPos).replace(/\S/g, maskChar) +
+				text.slice(endPos)
+			);
+		}
+
+		return text;
 	}
 	/**
 	 * 设置目标歌词行的对齐方式，默认为 `center`

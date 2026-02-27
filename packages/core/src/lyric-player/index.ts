@@ -13,7 +13,8 @@ enum MaskObsceneWordsMode {
 	Disabled = "",
 	/** 完全掩码所有不雅用语 */
 	FullMask = "full-mask",
-	// TODO: 更多模式
+	/** 保留首尾字符，屏蔽中间字符 */
+	PartialMask = "partial-mask",
 }
 
 /**
