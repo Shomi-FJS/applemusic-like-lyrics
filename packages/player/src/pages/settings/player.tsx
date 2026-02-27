@@ -73,6 +73,8 @@ import {
 	advanceLyricDynamicLyricTimeAtom,
 	DarkMode,
 	darkModeAtom,
+	enableAlwaysOnTopAtom,
+	enableHttpServerAtom,
 	enableMediaControlsAtom,
 	showStatJSFrameAtom,
 	updateInfoAtom,
@@ -1043,6 +1045,28 @@ const OthersSettings = () => {
 					"可以看到帧率、帧时间、内存占用（仅 Chromuim 系）等信息，对性能影响较小。",
 				)}
 				configAtom={showStatJSFrameAtom}
+			/>
+			<SwitchSettings
+				label={t(
+					"page.settings.others.enableHttpServer.label",
+					"启用远程控制服务",
+				)}
+				description={t(
+					"page.settings.others.enableHttpServer.description",
+					"启用 13533 端口的 HTTP 服务，提供远程控制页面与 REST API",
+				)}
+				configAtom={enableHttpServerAtom}
+			/>
+			<SwitchSettings
+				label={t(
+					"page.settings.others.enableAlwaysOnTop.label",
+					"窗口置顶",
+				)}
+				description={t(
+					"page.settings.others.enableAlwaysOnTop.description",
+					"让窗口始终显示在最上层",
+				)}
+				configAtom={enableAlwaysOnTopAtom}
 			/>
 			<SwitchSettings
 				label={t(
