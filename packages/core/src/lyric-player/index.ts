@@ -2,8 +2,8 @@ import { DomLyricPlayer } from "./dom/index.ts";
 
 export { LyricPlayerBase } from "./base.ts";
 export * from "./canvas/index.ts";
-export * from "./dom-slim/index.ts";
 export * from "./dom/index.ts";
+export * from "./dom-slim/index.ts";
 
 /**
  * 歌词中不雅用语的掩码模式
@@ -16,10 +16,20 @@ enum MaskObsceneWordsMode {
 	// TODO: 更多模式
 }
 
+/**
+ * 歌词行的渲染模式
+ * @internal
+ */
+enum LyricLineRenderMode {
+	SOLID = 0,
+	GRADIENT = 1,
+}
+
 export {
-	MaskObsceneWordsMode,
 	/**
 	 * 默认导出的歌词播放组件
 	 */
 	DomLyricPlayer as LyricPlayer,
+	LyricLineRenderMode,
+	MaskObsceneWordsMode,
 };

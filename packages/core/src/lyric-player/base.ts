@@ -1,11 +1,10 @@
 import structuredClone from "@ungap/structured-clone";
-import {
-	type Disposable,
-	type HasElement,
-	type LyricLine,
-	LyricLineRenderMode,
-	type LyricWord,
-	type OptimizeLyricOptions,
+import type {
+	Disposable,
+	HasElement,
+	LyricLine,
+	LyricWord,
+	OptimizeLyricOptions,
 } from "../interfaces.ts";
 import styles from "../styles/lyric-player.module.css";
 import { eqSet } from "../utils/eq-set.ts";
@@ -14,7 +13,7 @@ import { optimizeLyricLines } from "../utils/optimize-lyric.ts";
 import { Spring, type SpringParams } from "../utils/spring.ts";
 import { BottomLineEl } from "./bottom-line.ts";
 import { InterludeDots } from "./dom/interlude-dots.ts";
-import { MaskObsceneWordsMode } from "./index.ts";
+import { LyricLineRenderMode, MaskObsceneWordsMode } from "./index.ts";
 
 /**
  * 歌词播放器的基类，已经包含了有关歌词操作和排版的功能，子类需要为其实现对应的显示展示操作

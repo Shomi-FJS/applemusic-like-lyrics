@@ -1,9 +1,5 @@
 import bezier from "bezier-easing";
-import {
-	type LyricLine,
-	LyricLineRenderMode,
-	type LyricWord,
-} from "../../interfaces.ts";
+import type { LyricLine, LyricWord } from "../../interfaces.ts";
 import styles from "../../styles/lyric-player.module.css";
 import { isCJK } from "../../utils/is-cjk.ts";
 import { chunkAndSplitLyricWords } from "../../utils/lyric-split-words.ts";
@@ -13,6 +9,7 @@ import {
 	scaleMatrix4,
 } from "../../utils/matrix.ts";
 import { LyricLineBase } from "../base.ts";
+import { LyricLineRenderMode } from "../index.ts";
 import type { DomLyricPlayer } from ".";
 
 interface RealWord extends LyricWord {
