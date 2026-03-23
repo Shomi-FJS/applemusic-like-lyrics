@@ -41,15 +41,14 @@ function matchScore(
 	const normalizedSongName = normalizeString(songName);
 	const normalizedArtistName = normalizeString(artistName);
 
-	const nameMatch =
-		normalizedMetaName === normalizedSongName ||
-		normalizedMetaName.includes(normalizedSongName) ||
-		normalizedSongName.includes(normalizedMetaName);
+	console.log(
+		TTML_LOG_TAG,
+		`匹配: 目标: "${songName}" - "${artistName}"`,
+		`候选: "${metaMusicName}" - "${metaArtists}"`,
+	);
 
-	const artistMatch =
-		normalizedMetaArtists === normalizedArtistName ||
-		normalizedMetaArtists.includes(normalizedArtistName) ||
-		normalizedArtistName.includes(normalizedMetaArtists);
+	const nameMatch = normalizedMetaName === normalizedSongName;
+	const artistMatch = normalizedMetaArtists === normalizedArtistName;
 
 	if (nameMatch && artistMatch) return 100;
 	if (nameMatch) return 50;

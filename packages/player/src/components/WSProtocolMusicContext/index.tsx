@@ -371,9 +371,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						state.musicName,
 						state.artists.map((a) => a.name).join(", "),
 					).then((result) => {
-						if (result.contributor) {
-							store.set(lyricContributorAtom, result.contributor);
-						}
+						store.set(lyricContributorAtom, result.contributor);
 					});
 					updateRemoteNowPlaying();
 					break;
