@@ -6,6 +6,7 @@ import {
 	hideLyricViewAtom,
 	isLyricPageOpenedAtom,
 	isShuffleActiveAtom,
+	lyricContributorAtom,
 	musicAlbumNameAtom,
 	musicArtistsAtom,
 	musicCoverAtom,
@@ -41,6 +42,7 @@ import {
 	wsProtocolListenAddrAtom,
 } from "../../states/appAtoms.ts";
 import { emitAudioThread } from "../../utils/player.ts";
+import { findLyricContributor } from "../../utils/ttml-contributor-search.ts";
 import { FFTToLowPassContext } from "../LocalMusicContext/index.tsx";
 
 interface WSArtist {
@@ -364,6 +366,15 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						state.artists.map((v) => ({ id: v.id, name: v.name })),
 					);
 					store.set(musicPlayingPositionAtom, 0);
+					store.set(lyricContributorAtom, null);
+					findLyricContributor(
+						state.musicName,
+						state.artists.map((a) => a.name).join(", "),
+					).then((result) => {
+						if (result.contributor) {
+							store.set(lyricContributorAtom, result.contributor);
+						}
+					});
 					updateRemoteNowPlaying();
 					break;
 				}
@@ -393,11 +404,20 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 				}
 				case "setLyric": {
 					let lines: WSLyricLine[];
+					let contributor: string | null = null;
 					if (state.format === "structured") {
 						lines = state.lines;
 					} else {
 						try {
-							lines = parseTTML(state.data).lines;
+							const ttmlResult = parseTTML(state.data);
+							lines = ttmlResult.lines;
+							console.log("=== TTML 解析结果 metadata:", ttmlResult.metadata);
+							const authorMeta = ttmlResult.metadata?.find(
+								([key]) => key === "ttmlAuthorGithubLogin",
+							);
+							console.log("找到的 authorMeta:", authorMeta);
+							contributor = authorMeta?.[1]?.[0] ?? null;
+							console.log("设置的贡献者:", contributor);
 						} catch (e) {
 							console.error(e);
 							toast.error(
@@ -416,6 +436,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 					}));
 					store.set(hideLyricViewAtom, processed.length === 0);
 					store.set(musicLyricLinesAtom, processed);
+					store.set(lyricContributorAtom, contributor);
 					break;
 				}
 				case "progress": {
@@ -509,6 +530,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 				store.set(musicPlayingAtom, false);
 				store.set(musicLyricLinesAtom, []);
 				store.set(musicVolumeAtom, 1);
+				store.set(lyricContributorAtom, null);
 			}
 		};
 	}, [
