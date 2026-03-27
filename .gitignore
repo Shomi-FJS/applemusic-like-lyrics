@@ -32,3 +32,5 @@ pnpm-lock.yaml
 packages/player/src-tauri/Cargo.toml
 .vs/
 .trae/
+packages/packages.rar
+
