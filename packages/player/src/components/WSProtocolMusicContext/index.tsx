@@ -42,7 +42,7 @@ import {
 	wsProtocolListenAddrAtom,
 } from "../../states/appAtoms.ts";
 import { emitAudioThread } from "../../utils/player.ts";
-import { findLyricContributor } from "../../utils/ttml-contributor-search.ts";
+import { fetchLyricContributorByNCMId } from "../../utils/ttml-contributor-search.ts";
 import { FFTToLowPassContext } from "../LocalMusicContext/index.tsx";
 
 interface WSArtist {
@@ -357,6 +357,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			const state = payload.value;
 			switch (state.update) {
 				case "setMusic": {
+					const currentMusicId = state.musicId;
 					store.set(musicIdAtom, state.musicId);
 					store.set(musicNameAtom, state.musicName);
 					store.set(musicAlbumNameAtom, state.albumName);
@@ -367,12 +368,19 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 					);
 					store.set(musicPlayingPositionAtom, 0);
 					store.set(lyricContributorAtom, null);
-					findLyricContributor(
-						state.musicName,
-						state.artists.map((a) => a.name).join(", "),
-					).then((result) => {
-						store.set(lyricContributorAtom, result.contributor);
-					});
+					if (currentMusicId && /^\d+$/.test(currentMusicId)) {
+						fetchLyricContributorByNCMId(currentMusicId)
+							.then((result) => {
+								const latestMusicId = store.get(musicIdAtom);
+								const currentContributor = store.get(lyricContributorAtom);
+								if (result.contributor && latestMusicId === currentMusicId && !currentContributor) {
+									store.set(lyricContributorAtom, result.contributor);
+								}
+							})
+							.catch((err) => {
+								console.error("获取贡献者失败:", err);
+							});
+					}
 					updateRemoteNowPlaying();
 					break;
 				}
@@ -409,13 +417,10 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 						try {
 							const ttmlResult = parseTTML(state.data);
 							lines = ttmlResult.lines;
-							console.log("=== TTML 解析结果 metadata:", ttmlResult.metadata);
 							const authorMeta = ttmlResult.metadata?.find(
 								([key]) => key === "ttmlAuthorGithubLogin",
 							);
-							console.log("找到的 authorMeta:", authorMeta);
 							contributor = authorMeta?.[1]?.[0] ?? null;
-							console.log("设置的贡献者:", contributor);
 						} catch (e) {
 							console.error(e);
 							toast.error(
@@ -434,7 +439,12 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 					}));
 					store.set(hideLyricViewAtom, processed.length === 0);
 					store.set(musicLyricLinesAtom, processed);
-					store.set(lyricContributorAtom, contributor);
+					const hasWordLyrics = processed.some(
+						(line) => line.words && line.words.length > 0,
+					);
+					if (contributor && hasWordLyrics) {
+						store.set(lyricContributorAtom, contributor);
+					}
 					break;
 				}
 				case "progress": {

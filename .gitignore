@@ -30,3 +30,5 @@ packages/player/dist/screenshot.html
 pnpm-lock.yaml
 pnpm-lock.yaml
 packages/player/src-tauri/Cargo.toml
+.vs/
+.trae/

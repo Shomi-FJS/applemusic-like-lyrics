@@ -32,6 +32,7 @@ import {
 	PlayerControlsType,
 	playerControlsTypeAtom,
 	showBottomControlAtom,
+	showLyricContributorAtom,
 	showMusicAlbumAtom,
 	showMusicArtistsAtom,
 	showMusicNameAtom,
@@ -469,6 +470,17 @@ const LyricContentSettings = () => {
 					"仅上面两者启用后有效",
 				)}
 				configAtom={enableLyricSwapTransRomanLineAtom}
+			/>
+			<SwitchSettings
+				label={t(
+					"page.settings.lyricContent.showLyricContributor.label",
+					"显示歌词贡献者",
+				)}
+				description={t(
+					"page.settings.lyricContent.showLyricContributor.description",
+					"在歌词播放界面显示逐词歌词贡献者的 GitHub 用户名",
+				)}
+				configAtom={showLyricContributorAtom}
 			/>
 		</>
 	);

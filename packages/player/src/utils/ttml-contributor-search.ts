@@ -1,114 +1,116 @@
-import type { TTMLLyric } from "@applemusic-like-lyrics/lyric";
-import chalk from "chalk";
-import { db } from "../dexie";
-
-const TTML_LOG_TAG = chalk.bgHex("#FF5577").hex("#FFFFFF")(" TTML DB ");
+import { parseTTML } from "@applemusic-like-lyrics/lyric";
 
 export interface LyricMatchResult {
 	contributor: string | null;
 	matchedFile: string | null;
 }
 
-function normalizeString(str: string): string {
-	return str
-		.toLowerCase()
-		.replace(/[^\w\s\u4e00-\u9fff]/g, "")
-		.replace(/\s+/g, " ")
-		.trim();
-}
+const TTML_DB_BASE_URL = "https://amll-ttml-db.gbclstudio.cn/ncm-lyrics";
 
-function extractMetadataValue(
-	metadata: [string, string[]][] | undefined,
-	key: string,
-): string | null {
-	if (!metadata) return null;
-	const entry = metadata.find(([k]) => k === key);
-	return entry?.[1]?.[0] ?? null;
-}
+const contributorCache = new Map<string, string | null>();
 
-function matchScore(
-	ttmlLyric: TTMLLyric,
-	songName: string,
-	artistName: string,
-): number {
-	const metaMusicName = extractMetadataValue(ttmlLyric.metadata, "musicName");
-	const metaArtists = extractMetadataValue(ttmlLyric.metadata, "artists");
-
-	if (!metaMusicName || !metaArtists) return 0;
-
-	const normalizedMetaName = normalizeString(metaMusicName);
-	const normalizedMetaArtists = normalizeString(metaArtists);
-	const normalizedSongName = normalizeString(songName);
-	const normalizedArtistName = normalizeString(artistName);
-
-	console.log(
-		TTML_LOG_TAG,
-		`匹配: 目标: "${songName}" - "${artistName}"`,
-		`候选: "${metaMusicName}" - "${metaArtists}"`,
-	);
-
-	const nameMatch = normalizedMetaName === normalizedSongName;
-	const artistMatch = normalizedMetaArtists === normalizedArtistName;
-
-	if (nameMatch && artistMatch) return 100;
-	if (nameMatch) return 50;
-	if (artistMatch) return 25;
-
-	return 0;
-}
-
-export async function findLyricContributor(
-	songName: string,
-	artistName: string,
+export async function fetchLyricContributorByNCMId(
+	ncmId: string,
 ): Promise<LyricMatchResult> {
-	try {
-		const allEntries = await db.ttmlDB.toArray();
+	if (!ncmId || typeof ncmId !== "string") {
+		return { contributor: null, matchedFile: null };
+	}
 
-		if (allEntries.length === 0) {
-			console.log(TTML_LOG_TAG, "TTML 数据库为空，无法查询贡献者");
+	if (contributorCache.has(ncmId)) {
+		return {
+			contributor: contributorCache.get(ncmId) ?? null,
+			matchedFile: `${ncmId}.ttml`,
+		};
+	}
+
+	try {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+		const response = await fetch(`${TTML_DB_BASE_URL}/${ncmId}.ttml`, {
+			method: "GET",
+			signal: controller.signal,
+		});
+
+		clearTimeout(timeoutId);
+
+		if (!response.ok) {
+			contributorCache.set(ncmId, null);
 			return { contributor: null, matchedFile: null };
 		}
 
-		let bestMatch: { entry: (typeof allEntries)[0]; score: number } | null =
-			null;
+		const ttmlText = await response.text();
 
-		for (const entry of allEntries) {
-			const score = matchScore(entry.content, songName, artistName);
-			if (score > (bestMatch?.score ?? 0)) {
-				bestMatch = { entry, score };
-			}
+		if (!ttmlText || ttmlText.length === 0) {
+			contributorCache.set(ncmId, null);
+			return { contributor: null, matchedFile: null };
 		}
 
-		if (bestMatch && bestMatch.score >= 50) {
-			const contributor = extractMetadataValue(
-				bestMatch.entry.content.metadata,
-				"ttmlAuthorGithubLogin",
-			);
-			console.log(
-				TTML_LOG_TAG,
-				`匹配到歌词: ${bestMatch.entry.name}, 贡献者: ${contributor}, 匹配分数: ${bestMatch.score}`,
-			);
-			return {
-				contributor,
-				matchedFile: bestMatch.entry.name,
-			};
+		let ttmlResult;
+		try {
+			ttmlResult = parseTTML(ttmlText);
+		} catch (parseError) {
+			console.error("解析TTML失败:", parseError);
+			contributorCache.set(ncmId, null);
+			return { contributor: null, matchedFile: null };
 		}
 
-		console.log(
-			TTML_LOG_TAG,
-			`未找到匹配的歌词: "${songName}" - "${artistName}"`,
+		const lines = ttmlResult?.lines;
+		if (!lines || !Array.isArray(lines)) {
+			contributorCache.set(ncmId, null);
+			return { contributor: null, matchedFile: null };
+		}
+
+		const hasWordLyrics = lines.some(
+			(line) => line && Array.isArray(line.words) && line.words.length > 0,
 		);
-		return { contributor: null, matchedFile: null };
+
+		if (!hasWordLyrics) {
+			contributorCache.set(ncmId, null);
+			return { contributor: null, matchedFile: null };
+		}
+
+		const metadata = ttmlResult?.metadata;
+		let contributor: string | null = null;
+
+		if (metadata && Array.isArray(metadata)) {
+			const authorMeta = metadata.find(
+				([key]) => key === "ttmlAuthorGithubLogin",
+			);
+			contributor = authorMeta?.[1]?.[0] ?? null;
+		}
+
+		contributorCache.set(ncmId, contributor);
+
+		return {
+			contributor,
+			matchedFile: `${ncmId}.ttml`,
+		};
 	} catch (error) {
-		console.error(TTML_LOG_TAG, "查询歌词贡献者时出错:", error);
+		if (error instanceof Error && error.name === "AbortError") {
+			console.warn("获取歌词贡献者超时:", ncmId);
+		} else {
+			console.error("获取歌词贡献者时出错:", error);
+		}
+		contributorCache.set(ncmId, null);
 		return { contributor: null, matchedFile: null };
 	}
 }
 
-export async function findLyricContributorBySong(
-	songName: string,
-	artists: string[],
+export function invalidateContributorCache(): void {
+	contributorCache.clear();
+}
+
+export async function findLyricContributor(
+	_songName: string,
+	_artistName: string,
 ): Promise<LyricMatchResult> {
-	const artistName = artists.join(", ");
-	return findLyricContributor(songName, artistName);
+	return { contributor: null, matchedFile: null };
+}
+
+export async function findLyricContributorBySong(
+	_songName: string,
+	_artists: string[],
+): Promise<LyricMatchResult> {
+	return { contributor: null, matchedFile: null };
 }

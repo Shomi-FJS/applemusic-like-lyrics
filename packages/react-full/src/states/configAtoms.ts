@@ -247,6 +247,14 @@ export const showBottomControlAtom = atomWithStorage(
 	true,
 );
 
+/**
+ * 是否显示歌词贡献者标签。
+ */
+export const showLyricContributorAtom = atomWithStorage(
+	"amll-react-full.showLyricContributor",
+	true,
+);
+
 // ==================================================================
 //                        歌词背景配置
 // ==================================================================
