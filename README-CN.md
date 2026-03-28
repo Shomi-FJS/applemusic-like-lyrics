@@ -6,7 +6,7 @@
 
 [English](./README.md) / 简体中文
 
-一个基于 Web 技术制作的类 Apple Music 歌词显示组件库，同时支持[ DOM 原生](./packages/core/README.md)、[React ](./packages/react/README.md)和[ Vue ](./packages/react/README.md)绑定，[与各种平台兼容的外置播放器](./packages/player/README.md)也仍在制作当中。
+一个基于 Web 技术制作的类 Apple Music 歌词显示组件库，同时支持[ DOM 原生](./packages/core/README.md)、[React ](./packages/react/README.md)和[ Vue ](./packages/react/README.md)绑定。
 
 这是你能在前端系里能见到的最像 iPad Apple Music 的播放页面了。
 
@@ -14,11 +14,18 @@
 
 **—— AMLL 生态作品 ——**
 
-[AMLL TTML DB 逐词歌词仓库](https://github.com/Steve-xmh/amll-ttml-db)
-/
-[AMLL TTML Tool 逐词歌词编辑器](https://github.com/Steve-xmh/amll-ttml-tool)
+[AMLL TTML DB 逐词歌词仓库](https://github.com/amll-dev/amll-ttml-db)
 
-[引用了 AMLL 的项目汇总](https://github.com/Steve-xmh/applemusic-like-lyrics/discussions/397)
+[AMLL TTML Tool 逐词歌词编辑器](https://github.com/amll-dev/amll-ttml-tool)
+/
+[AMLL Editor 下一代逐词歌词编辑器](https://github.com/amll-dev/amll-editor)
+
+[AMLL Player 本地播放器](./packages/player/README-CN.md)
+/
+[AMLL Page 网页播放器](https://github.com/apoint123/amll-page)
+
+
+[引用了 AMLL 的项目汇总](https://github.com/amll-dev/applemusic-like-lyrics/discussions/397)
 
 </div>
 
@@ -30,12 +37,6 @@
 -   [![AMLL-React](https://img.shields.io/badge/React-%23149eca?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/react/README.md)：AMLL React 绑定，提供 React 组件形式的歌词显示组件和动态流体背景组件
 -   [![AMLL-Vue](https://img.shields.io/badge/Vue-%2342d392?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/vue/README.md)：AMLL Vue 绑定，提供 Vue 组件形式的歌词显示组件和动态流体背景组件
 -   [![AMLL-Lyric](https://img.shields.io/badge/Lyric-%23FB8C84?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/lyric/README.md)：AMLL 歌词解析模块，提供对 LyRiC, YRC, QRC, Lyricify Syllable 各种歌词格式的解析和序列化支持
-
-### 外部工具
-
--   [AMLL Player](./packages/player/README.md)：AMLL 外置播放器，提供独立的外置歌词播放器，并通过独有的 WebSocket 协议与 AMLL 任意实现了协议的程序进行通信展示歌词
--   [AMLL TTML Tool](https://github.com/Steve-xmh/amll-ttml-tool)： AMLL TTML 编辑器，提供对 TTML 格式歌词的编辑支持，并使用 AMLL Core 进行实时预览
--   [AMLL TTML Database](https://github.com/Steve-xmh/amll-ttml-db)： AMLL TTML 数据库，提供 TTML 歌词存储仓库，以让各类歌词播放器可以使用由社区制作的 TTML 逐词歌词
 
 ## 浏览器兼容性提醒
 

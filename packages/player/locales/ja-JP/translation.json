@@ -121,6 +121,10 @@
 		"playlist": {
 			"addLocalMusic": {
 				"allFiles": "所有文件",
+				"dialog": {
+					"failedDescription": "以下 {count, plural, other {#}} 首歌曲添加失败：",
+					"failedTitle": "部分歌曲导入失败"
+				},
 				"filterName": "音频文件",
 				"label": "添加本地歌曲",
 				"toast": {
@@ -342,6 +346,34 @@
 				"enableMediaControls": {
 					"description": "目前只支持 Windows 的 SMTC",
 					"label": "启用内置播放器的媒体控件"
+				}
+			},
+			"taskbarLyric": {
+				"align": {
+					"auto": "自动",
+					"description": "任务栏歌词的对齐方向",
+					"label": "对齐方向",
+					"left": "左对齐",
+					"right": "右对齐"
+				},
+				"enable": {
+					"description": "在 Windows 任务栏上显示当前播放的歌词",
+					"label": "启用任务栏歌词"
+				},
+				"mode": {
+					"auto": "自动",
+					"double": "双行模式",
+					"label": "歌词行数",
+					"single": "单行模式"
+				},
+				"openDevtools": "打开 DevTools",
+				"subtitle": "任务栏歌词",
+				"theme": {
+					"auto": "跟随任务栏",
+					"dark": "深色",
+					"description": "覆盖任务栏歌词的颜色主题",
+					"label": "主题设置",
+					"light": "浅色"
 				}
 			}
 		},

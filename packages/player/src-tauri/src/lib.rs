@@ -1,30 +1,36 @@
-use crate::server::AMLLWebSocketServer;
+use std::net::SocketAddr;
+use std::sync::{Arc, LazyLock, RwLock as StdRwLock};
+
 use amll_player_core::AudioInfo;
 use anyhow::Context;
 use ffmpeg_next as ffmpeg;
 use serde::*;
 use serde_json::Value;
-use std::net::SocketAddr;
-use std::sync::{Arc, LazyLock, RwLock as StdRwLock};
-use tauri::ipc::Channel;
 use tauri::{
-    AppHandle, Manager, PhysicalSize, Runtime, Size, State, WebviewWindowBuilder,
+    AppHandle, Manager, PhysicalSize, Runtime, Size, State, WebviewWindowBuilder, ipc::Channel,
+    path::BaseDirectory,
     utils::config::WindowEffectsConfig, window::Effect,
 };
 use tokio::sync::RwLock;
 use tracing::*;
+
+use crate::server::AMLLWebSocketServer;
 
 mod http_server;
 mod player;
 mod screen_capture;
 mod server;
 
+#[cfg(target_os = "windows")]
+mod taskbar_lyric;
+#[cfg(target_os = "windows")]
+mod theme_watcher;
+
 pub type AMLLWebSocketServerWrapper = Arc<RwLock<AMLLWebSocketServer>>;
 pub type AMLLWebSocketServerState<'r> = State<'r, AMLLWebSocketServerWrapper>;
 pub type HttpServerControllerWrapper = Arc<RwLock<http_server::HttpServerController>>;
 pub type HttpServerControllerState<'r> = State<'r, HttpServerControllerWrapper>;
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 async fn ws_reopen_connection(
     addr: &str,
@@ -170,6 +176,67 @@ impl From<AudioInfo> for MusicInfo {
             duration: v.duration,
         }
     }
+}
+
+#[tauri::command]
+async fn resolve_content_uri(
+    file_path: tauri_plugin_fs::FilePath,
+    fs: State<'_, tauri_plugin_fs::Fs<tauri::Wry>>,
+    app: AppHandle,
+) -> Result<String, String> {
+    if let Some(p) = file_path.as_path() {
+        return Ok(p.to_string_lossy().into_owned());
+    }
+
+    let uri_string = match &file_path {
+        tauri_plugin_fs::FilePath::Url(u) => u.to_string(),
+        tauri_plugin_fs::FilePath::Path(p) => p.to_string_lossy().into_owned(),
+    };
+
+    let ext = uri_string
+        .rsplit('/')
+        .next()
+        .and_then(|segment| {
+            let decoded = urlencoding::decode(segment).unwrap_or(segment.into());
+            let name = decoded.rsplit('/').next().unwrap_or(&decoded);
+            name.rsplit('.').next().map(|e| e.to_lowercase())
+        })
+        .filter(|e| ["mp3", "flac", "wav", "m4a", "aac", "ogg", "wma", "opus"].contains(&e.as_str()))
+        .unwrap_or_else(|| "audio".to_string());
+
+    let uri_hash = format!("{:x}", md5::compute(uri_string.as_bytes()));
+    let filename = format!("{uri_hash}.{ext}");
+
+    let data_dir = app
+        .path()
+        .resolve("music_cache", BaseDirectory::AppData)
+        .map_err(|e| format!("Failed to resolve app data dir: {e}"))?;
+    std::fs::create_dir_all(&data_dir)
+        .map_err(|e| format!("Failed to create music_cache dir: {e}"))?;
+
+    let target_path = data_dir.join(&filename);
+
+    if target_path.exists() {
+        return Ok(target_path.to_string_lossy().into_owned());
+    }
+
+    let mut open_opts = tauri_plugin_fs::OpenOptions::new();
+    open_opts.read(true);
+    let mut src_file = fs
+        .open(file_path, open_opts)
+        .map_err(|e| format!("Failed to open content URI: {e}"))?;
+
+    let mut dst_file = std::fs::File::create(&target_path)
+        .map_err(|e| format!("Failed to create cache file: {e}"))?;
+
+    std::io::copy(&mut src_file, &mut dst_file)
+        .map_err(|e| {
+            let _ = std::fs::remove_file(&target_path);
+            format!("Failed to copy file: {e}")
+        })?;
+
+    info!("Resolved content URI to: {}", target_path.display());
+    Ok(target_path.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
@@ -344,7 +411,7 @@ fn init_logging() {
     #[cfg(debug_assertions)]
     {
         tracing_subscriber::fmt()
-            .with_env_filter("amll_player=trace,wry=info")
+            .with_env_filter("amll_player=trace,wry=info,taskbar_lyric=trace")
             .with_thread_names(true)
             .with_timer(tracing_subscriber::fmt::time::uptime())
             .init();
@@ -411,13 +478,43 @@ pub fn run() {
             screen_capture::take_screenshot,
             player::local_player_send_msg,
             player::set_media_controls_enabled,
+            resolve_content_uri,
             read_local_music_metadata,
             restart_app,
             reset_window_theme,
             get_local_ips,
+            #[cfg(target_os = "windows")]
+            taskbar_lyric::mouse_forward::set_click_interception,
+            #[cfg(target_os = "windows")]
+            taskbar_lyric::mouse_forward::set_forwarding_enabled,
+            #[cfg(target_os = "windows")]
+            taskbar_lyric::mouse_forward::stop_mouse_hook,
+            #[cfg(target_os = "windows")]
+            taskbar_lyric::close_taskbar_lyric,
+            #[cfg(target_os = "windows")]
+            taskbar_lyric::open_taskbar_lyric,
+            #[cfg(target_os = "windows")]
+            taskbar_lyric::open_taskbar_lyric_devtools,
+            #[cfg(target_os = "windows")]
+            theme_watcher::get_system_theme
         ])
         .setup(|app| {
             player::init_local_player(app.handle().clone());
+
+            #[cfg(target_os = "windows")]
+            app.manage(taskbar_lyric::TaskbarLyricState::default());
+
+            #[cfg(target_os = "windows")]
+            {
+                match theme_watcher::ThemeWatcher::new(app.handle().clone()) {
+                    Ok(watcher) => {
+                        app.manage(watcher);
+                    }
+                    Err(e) => {
+                        warn!("启动系统主题监听失败: {e}");
+                    }
+                }
+            }
 
             #[cfg(desktop)]
             let _ = app
@@ -435,6 +532,15 @@ pub fn run() {
                 tauri::async_runtime::block_on(recreate_window(app.handle(), "main", None));
             }
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            #[cfg(target_os = "windows")]
+            if let tauri::WindowEvent::Destroyed = event
+                && window.label() == "main"
+                && let Some(taskbar_win) = window.app_handle().get_webview_window("taskbar-lyric")
+            {
+                let _ = taskbar_win.destroy();
+            }
         })
         .run(context)
         .expect("error while running tauri application");

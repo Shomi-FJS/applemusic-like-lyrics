@@ -22,10 +22,6 @@ export interface AudioInfo {
 	artist: string;
 	album: string;
 	lyric: string;
-	coverMediaType: string;
-	// 本质是 Uint8Array
-	// TODO: 返回成 Base64？
-	cover?: number[];
 	duration: number;
 	position: number;
 }
@@ -44,19 +40,14 @@ export type SongData =
 	  };
 
 export type AudioThreadMessageMap = {
-	resumeAudio: {};
-	pauseAudio: {};
-	resumeOrPauseAudio: {};
+	resumeAudio: undefined;
+	pauseAudio: undefined;
+	resumeOrPauseAudio: undefined;
 	seekAudio: {
 		position: number;
 	};
-	jumpToSong: {
-		songIndex: number;
-	};
-	prevSong: {};
-	nextSong: {};
-	setPlaylist: {
-		songs: SongData[];
+	playAudio: {
+		song: SongData;
 	};
 	setVolume: {
 		volume: number;
@@ -74,16 +65,15 @@ export type AudioThreadMessageMap = {
 	setMediaControlsEnabled: {
 		enabled: boolean;
 	};
-	syncStatus: {};
-	close: {};
+	close: undefined;
 };
 
 export type AudioThreadMessageKeys = keyof AudioThreadMessageMap;
 
 export type AudioThreadMessagePayloadMap = {
-	[T in keyof AudioThreadMessageMap]: {
-		type: T;
-	} & AudioThreadMessageMap[T];
+	[T in AudioThreadMessageKeys]: AudioThreadMessageMap[T] extends undefined
+		? { type: T }
+		: { type: T } & AudioThreadMessageMap[T];
 };
 
 export type AudioThreadMessage =
@@ -104,46 +94,33 @@ export type AudioThreadEvent =
 				musicId: string;
 				musicInfo: AudioInfo;
 				quality: AudioQuality;
-				currentPlayIndex: number;
 			};
 	  }
 	| {
 			type: "loadingAudio";
-			data: { musicId: string; currentPlayIndex: number };
+			data: { musicId: string };
 	  }
 	| {
-			type: "syncStatus";
-			data: {
-				musicId: string;
-				musicInfo: AudioInfo;
-				isPlaying: boolean;
-				duration: number;
-				position: number;
-				volume: number;
-				loadPosition: number;
-				playlist: SongData[];
-				currentPlayIndex: number;
-				playlistInited: boolean;
-				quality: AudioQuality;
-			};
+			type: "audioPlayFinished";
+			data: { musicId: string };
 	  }
 	| {
-			type: "playListChanged";
-			data: {
-				playlist: SongData[];
-				currentPlayIndex: number;
-			};
+			type: "trackEnded";
+	  }
+	| {
+			type: "hardwareMediaCommand";
+			data: { command: string };
 	  }
 	| {
 			type: "playStatus";
 			data: { isPlaying: boolean };
 	  }
 	| {
-			type: "setDuration";
-			data: { duration: number };
+			type: "loadError";
+			data: { error: string };
 	  }
 	| {
-			type: "loadError";
+			type: "playError";
 			data: { error: string };
 	  }
 	| {
@@ -155,8 +132,10 @@ export type AudioThreadEvent =
 			data: { data: number[] };
 	  };
 
-const msgTasks = new Map<string, (value: unknown) => void>();
-const eventListeners = new Set<EventCallback<AudioThreadEventMessage<any>>>();
+const msgTasks = new Map<string, (value: AudioThreadEvent) => void>();
+const eventListeners = new Set<
+	EventCallback<AudioThreadEventMessage<AudioThreadEvent>>
+>();
 
 let isInitialized = false;
 
@@ -205,6 +184,10 @@ export const listenAudioThreadEvent = (
 	return Promise.resolve(unlisten);
 };
 
+export async function resolveContentUri(filePath: string): Promise<string> {
+	return await invoke("resolve_content_uri", { filePath });
+}
+
 export async function readLocalMusicMetadata(filePath: string): Promise<{
 	name: string;
 	artist: string;
@@ -221,37 +204,54 @@ export async function restartApp(): Promise<never> {
 	return await invoke("restart_app");
 }
 
-export async function emitAudioThread<
-	D extends AudioThreadMessage,
-	T extends D["type"],
->(msgType: T, data?: Omit<D, "type">): Promise<void> {
+export async function emitAudioThread<T extends keyof AudioThreadMessageMap>(
+	msgType: T,
+	...args: AudioThreadMessageMap[T] extends undefined
+		? []
+		: [data: AudioThreadMessageMap[T]]
+): Promise<void> {
 	const id = uid(32) + Date.now();
+
+	const payloadData = args[0]
+		? { type: msgType, ...args[0] }
+		: { type: msgType };
+
 	await invoke("local_player_send_msg", {
 		msg: {
 			callbackId: id,
-			data: {
-				type: msgType,
-				...(data ?? {}),
-			},
-		} as AudioThreadEventMessage<D>,
+			data: payloadData,
+		},
 	});
 }
 
-export function emitAudioThreadRet<
-	D extends AudioThreadMessage,
-	T extends D["type"],
->(msgType: T, data?: Omit<D, "type">): Promise<unknown> {
+export function emitAudioThreadRet<T extends keyof AudioThreadMessageMap>(
+	msgType: T,
+	...args: AudioThreadMessageMap[T] extends undefined
+		? []
+		: [data: AudioThreadMessageMap[T]]
+): Promise<AudioThreadEvent> {
 	const id = `${uid(32)}-${Date.now()}`;
-	return new Promise((resolve) => {
-		msgTasks.set(id, resolve);
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => {
+			msgTasks.delete(id);
+			reject(new Error(`等待 ${msgType} 的回应超时`));
+		}, 5000);
+
+		msgTasks.set(id, (val) => {
+			clearTimeout(timeout);
+			resolve(val);
+		});
+
+		const payloadData = args[0]
+			? { type: msgType, ...args[0] }
+			: { type: msgType };
+
 		invoke("local_player_send_msg", {
-			msg: {
-				callbackId: id,
-				data: {
-					type: msgType,
-					...(data ?? {}),
-				},
-			} as AudioThreadEventMessage<D>,
+			msg: { callbackId: id, data: payloadData },
+		}).catch((err) => {
+			clearTimeout(timeout);
+			msgTasks.delete(id);
+			reject(err);
 		});
 	});
 }

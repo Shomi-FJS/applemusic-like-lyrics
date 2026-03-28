@@ -1,6 +1,12 @@
-import { toDuration } from "@applemusic-like-lyrics/react-full";
+import {
+	currentPlaylistAtom,
+	currentPlaylistMusicIndexAtom,
+	musicPlayingPositionAtom,
+	toDuration,
+} from "@applemusic-like-lyrics/react-full";
 import { Avatar, Box, Card, ContextMenu, Flex, Text } from "@radix-ui/themes";
-import { type CSSProperties, type PropsWithChildren, forwardRef } from "react";
+import { useSetAtom } from "jotai";
+import { type CSSProperties, forwardRef, type PropsWithChildren } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { Song } from "../../dexie.ts";
 import { router } from "../../router.tsx";
@@ -16,6 +22,9 @@ export const SongCard = forwardRef<
 >(({ song, style, children }, ref) => {
 	const songImgUrl = useSongCover(song);
 	const { t } = useTranslation();
+	const setPlaylist = useSetAtom(currentPlaylistAtom);
+	const setPlayIndex = useSetAtom(currentPlaylistMusicIndexAtom);
+	const setPosition = useSetAtom(musicPlayingPositionAtom);
 
 	return (
 		<Box py="1" style={style} ref={ref}>
@@ -55,16 +64,17 @@ export const SongCard = forwardRef<
 				<ContextMenu.Content>
 					<ContextMenu.Item
 						onClick={async () => {
-							await emitAudioThread("setPlaylist", {
-								songs: [
-									{
-										type: "local",
-										filePath: song.filePath,
-										origOrder: 0,
-									},
-								],
-							});
-							await emitAudioThread("nextSong");
+							const targetSong = {
+								type: "local" as const,
+								filePath: song.filePath,
+								origOrder: 0,
+							};
+
+							setPlaylist([targetSong]);
+							setPlayIndex(0);
+							setPosition(0);
+
+							await emitAudioThread("playAudio", { song: targetSong });
 						}}
 					>
 						<Trans i18nKey="amll.contextMenu.play">播放</Trans>

@@ -52,51 +52,23 @@ pub enum AudioThreadMessage {
     #[serde(rename_all = "camelCase")]
     ResumeOrPauseAudio,
     #[serde(rename_all = "camelCase")]
-    SeekAudio {
-        position: f64,
-    },
+    SeekAudio { position: f64 },
     #[serde(rename_all = "camelCase")]
-    JumpToSong {
-        song_index: usize,
-    },
+    PlayAudio { song: SongData },
     #[serde(rename_all = "camelCase")]
-    PrevSong,
+    SetVolume { volume: f64 },
     #[serde(rename_all = "camelCase")]
-    NextSong,
+    SetVolumeRelative { volume: f64 },
     #[serde(rename_all = "camelCase")]
-    NextSongGapless,
+    SetAudioOutput { name: String },
     #[serde(rename_all = "camelCase")]
-    SetPlaylist {
-        songs: Vec<SongData>,
-    },
+    SetFFT { enabled: bool },
     #[serde(rename_all = "camelCase")]
-    SetVolume {
-        volume: f64,
-    },
+    SetFFTRange { from_freq: f32, to_freq: f32 },
     #[serde(rename_all = "camelCase")]
-    SetVolumeRelative {
-        volume: f64,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetAudioOutput {
-        name: String,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetFFT {
-        enabled: bool,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetFFTRange {
-        from_freq: f32,
-        to_freq: f32,
-    },
-    #[serde(rename_all = "camelCase")]
-    SyncStatus,
+    SetMediaControlsEnabled { enabled: bool },
     #[serde(rename_all = "camelCase")]
     Close,
-    SetMediaControlsEnabled {
-        enabled: bool,
-    },
 }
 
 pub type AudioPlayerEventSender =
@@ -121,34 +93,15 @@ pub enum AudioThreadEvent {
         music_id: String,
         music_info: AudioInfo,
         quality: AudioQuality,
-        current_play_index: usize,
     },
     #[serde(rename_all = "camelCase")]
-    LoadingAudio {
-        music_id: String,
-        current_play_index: usize,
-    },
+    LoadingAudio { music_id: String },
     #[serde(rename_all = "camelCase")]
     AudioPlayFinished { music_id: String },
     #[serde(rename_all = "camelCase")]
-    SyncStatus {
-        music_id: String,
-        music_info: AudioInfo,
-        is_playing: bool,
-        duration: f64,
-        position: f64,
-        volume: f64,
-        load_position: f64,
-        playlist: Vec<SongData>,
-        current_play_index: usize,
-        playlist_inited: bool,
-        quality: AudioQuality,
-    },
+    TrackEnded,
     #[serde(rename_all = "camelCase")]
-    PlayListChanged {
-        playlist: Vec<SongData>,
-        current_play_index: usize,
-    },
+    HardwareMediaCommand { command: String },
     #[serde(rename_all = "camelCase")]
     PlayStatus { is_playing: bool },
     #[serde(rename_all = "camelCase")]

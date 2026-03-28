@@ -94,6 +94,7 @@ export default defineConfig({
 			input: {
 				index: resolve(__dirname, "index.html"),
 				screenshot: resolve(__dirname, "screenshot.html"),
+				"taskbar-lyric": resolve(__dirname, "taskbar-lyric.html"),
 			},
 		},
 		sourcemap: "inline",

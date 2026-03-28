@@ -29,6 +29,16 @@ export const musicContextModeAtom = atomWithStorage(
 	MusicContextMode.Local,
 );
 
+/**
+ * 歌词库的版本号，从 version.json 的 commit 字段获得
+ */
+export const lyricDBVersionAtom = atomWithStorage<string | null>(
+	"amll-player.lyricDBVersion",
+	null,
+	undefined,
+	{ getOnInit: true },
+);
+
 export const advanceLyricDynamicLyricTimeAtom = atomWithStorage(
 	"amll-player.advanceLyricDynamicLyricTimeAtom",
 	false,
@@ -117,4 +127,21 @@ export const wsProtocolConnectedAddrsAtom = atom(new Set<string>());
 export const isCheckingUpdateAtom = atom(false);
 export const updateInfoAtom = atom<Update | false>(false);
 export const autoUpdateAtom = atomWithStorage("amll-player.autoUpdate", true);
+
+export const enableTaskbarLyricAtom = atomWithStorage(
+	"amll-player.enableTaskbarLyric",
+	false,
+);
+
 export const audioQualityDialogOpenedAtom = atom(false);
+
+export const taskbarLyricThemeSettingAtom = atomWithStorage<
+	"auto" | "light" | "dark"
+>("amll-player.taskbarLyricTheme", "auto");
+export const taskbarLyricAlignSettingAtom = atomWithStorage<
+	"auto" | "left" | "right"
+>("amll-player.taskbarLyricAlign", "auto");
+
+export const taskbarLyricModeSettingAtom = atomWithStorage<
+	"auto" | "single" | "double"
+>("amll-player.taskbarLyricMode", "auto");

@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::sync::atomic::AtomicU64;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -54,6 +55,7 @@ pub struct FFmpegDecoder {
     audio_quality: AudioQuality,
     local_buffer: VecDeque<f32>,
     fft_player: Arc<RwLock<FFTPlayer>>,
+    samples_played: Arc<AtomicU64>,
 }
 
 struct DecoderInitData {
@@ -84,7 +86,7 @@ impl FFmpegDecoder {
         fft_player: Arc<RwLock<FFTPlayer>>,
         target_channels: u16,
         target_sample_rate: u32,
-    ) -> anyhow::Result<(Self, FFmpegDecoderHandle)> {
+    ) -> anyhow::Result<(Self, FFmpegDecoderHandle, Arc<AtomicU64>)> {
         let shared = Arc::new(Shared {
             buffer: Mutex::new(VecDeque::with_capacity(FRAME_BUFFER_CAPACITY)),
             is_eof: AtomicBool::new(false),
@@ -115,6 +117,8 @@ impl FFmpegDecoder {
             control_tx: control_tx.clone(),
         };
 
+        let samples_played = Arc::new(AtomicU64::new(0));
+
         let decoder = Self {
             shared,
             decoder_thread: Some(decoder_thread),
@@ -126,9 +130,10 @@ impl FFmpegDecoder {
             audio_quality: metadata.audio_quality,
             local_buffer: VecDeque::new(),
             fft_player,
+            samples_played: samples_played.clone(),
         };
 
-        Ok((decoder, handle))
+        Ok((decoder, handle, samples_played))
     }
 
     pub fn audio_info(&self) -> AudioInfo {
@@ -493,6 +498,7 @@ impl Iterator for FFmpegDecoder {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(sample) = self.local_buffer.pop_front() {
+            self.samples_played.fetch_add(1, Ordering::Relaxed);
             return Some(sample);
         }
 
@@ -520,7 +526,11 @@ impl Iterator for FFmpegDecoder {
 
         self.local_buffer.extend(chunk.player_samples);
 
-        self.local_buffer.pop_front()
+        let sample = self.local_buffer.pop_front();
+        if sample.is_some() {
+            self.samples_played.fetch_add(1, Ordering::Relaxed);
+        }
+        sample
     }
 }
 
@@ -549,6 +559,8 @@ impl Source for FFmpegDecoder {
             });
         }
         self.local_buffer.clear();
+        self.samples_played.store(0, Ordering::SeqCst);
+
         Ok(())
     }
 }

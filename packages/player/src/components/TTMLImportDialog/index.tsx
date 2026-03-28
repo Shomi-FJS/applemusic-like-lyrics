@@ -139,7 +139,7 @@ export const TTMLImportDialog: FC<{
 							<Button
 								variant="outline"
 								onClick={() =>
-									open("https://github.com/Steve-xmh/amll-ttml-db")
+									open("https://github.com/amll-dev/amll-ttml-db")
 								}
 								style={{
 									verticalAlign: "baseline",

@@ -333,21 +333,12 @@ const PrebuiltProgressBar: FC = React.memo(() => {
 						)}
 					</AnimatePresence>
 				</div>
-				<button
-					type="button"
-					style={{
-						...fontStyle,
-						cursor: "pointer",
-						userSelect: "none",
-						background: "none",
-						border: "none",
-						padding: 0,
-						color: "inherit",
-					}}
+				<div
+					style={{ ...fontStyle, cursor: "pointer", userSelect: "none" }}
 					onClick={() => setShowRemaining(!showRemaining)}
 				>
 					{showRemaining ? <TimeLabel isRemaining /> : <TotalDurationLabel />}
-				</button>
+				</div>
 			</div>
 		</div>
 	);

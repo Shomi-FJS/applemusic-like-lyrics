@@ -2,20 +2,33 @@ name: "构建并部署开发文档"
 
 on:
   push:
+    paths:
+      - 'packages/docs/**'
     branches:
       - full-refractor
       - dev
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: true
 
 jobs:
-  deploy-docs:
-    name: 构建并部署开发文档
+  build-docs:
+    name: 构建开发文档
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: 克隆仓库
+      - name: 配置 Github Pages
+        uses: actions/configure-pages@v5
       - name: 安装 PNPM
         uses: pnpm/action-setup@v4
       - name: 安装 Node.js
@@ -37,8 +50,19 @@ jobs:
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: false
           AMLL_GITHUB_IS_ACTION: true
-      - name: 部署到 Github Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: 上传 Github Pages 构建产物
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: packages/docs/dist
+          path: packages/docs/dist
+
+  deploy-docs:
+    name: 部署开发文档
+    runs-on: ubuntu-latest
+    needs: build-docs
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 Github Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

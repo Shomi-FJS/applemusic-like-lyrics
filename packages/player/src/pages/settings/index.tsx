@@ -1,6 +1,7 @@
 import {
 	ArrowLeftIcon,
 	Component1Icon,
+	DesktopIcon,
 	GearIcon,
 	HamburgerMenuIcon,
 	InfoCircledIcon,
@@ -120,6 +121,14 @@ const SidebarContent: FC<{ onNavigate: (pageId: string) => void }> = ({
 				icon: <Component1Icon width={20} height={20} />,
 			},
 		];
+
+		if (os === "windows") {
+			pages.push({
+				id: "taskbarLyric",
+				label: t("page.settings.taskbarLyric.subtitle", "任务栏歌词"),
+				icon: <DesktopIcon width={20} height={20} />,
+			});
+		}
 
 		pages.push({
 			id: "about",

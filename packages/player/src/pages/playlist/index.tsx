@@ -1,4 +1,9 @@
 import {
+	currentPlaylistAtom,
+	currentPlaylistMusicIndexAtom,
+	musicPlayingPositionAtom,
+} from "@applemusic-like-lyrics/react-full";
+import {
 	ArrowLeftIcon,
 	Pencil1Icon,
 	PlayIcon,
@@ -8,18 +13,20 @@ import {
 	Box,
 	Button,
 	ContextMenu,
+	Dialog,
 	Flex,
 	Heading,
 	IconButton,
+	ScrollArea,
 	Text,
 	TextField,
 } from "@radix-ui/themes";
 import { path } from "@tauri-apps/api";
 import { open } from "@tauri-apps/plugin-dialog";
-import { stat } from "@tauri-apps/plugin-fs";
 import { platform } from "@tauri-apps/plugin-os";
 import { useLiveQuery } from "dexie-react-hooks";
 import { motion, useMotionTemplate, useScroll } from "framer-motion";
+import { useSetAtom } from "jotai";
 import md5 from "md5";
 import { type FC, useCallback, useMemo, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -30,7 +37,11 @@ import { PageContainer } from "../../components/PageContainer/index.tsx";
 import { PlaylistCover } from "../../components/PlaylistCover/index.tsx";
 import { PlaylistSongCard } from "../../components/PlaylistSongCard/index.tsx";
 import { db, type Song } from "../../dexie.ts";
-import { emitAudioThread, readLocalMusicMetadata } from "../../utils/player.ts";
+import {
+	emitAudioThread,
+	readLocalMusicMetadata,
+	resolveContentUri,
+} from "../../utils/player.ts";
 import styles from "./index.module.css";
 
 export type Loadable<Value> =
@@ -103,6 +114,13 @@ export const Component: FC = () => {
 	});
 	const playlistCoverSize = useMotionTemplate`clamp(6em,calc(12em - ${playlistViewScroll.scrollY}px),12em)`;
 	const playlistInfoGapSize = useMotionTemplate`clamp(var(--space-1), calc(var(--space-4) - ${playlistViewScroll.scrollY}px / 5), var(--space-4))`;
+	const [failedImports, setFailedImports] = useState<
+		{ path: string; error: string }[]
+	>([]);
+
+	const setPlaylist = useSetAtom(currentPlaylistAtom);
+	const setPlayIndex = useSetAtom(currentPlaylistMusicIndexAtom);
+	const setPosition = useSetAtom(musicPlayingPositionAtom);
 
 	const onAddLocalMusics = useCallback(async () => {
 		let filters = [
@@ -149,17 +167,18 @@ export const Component: FC = () => {
 		);
 		let current = 0;
 		let success = 0;
-		let errored = 0;
+		const currentFailedList: { path: string; error: string }[] = [];
 		const transformed = (
 			await Promise.all(
 				results.map(async (v) => {
 					let normalized = v;
 					console.log(v);
-					if (platform() !== "android" && platform() !== "ios") {
+					if (platform() === "android" || platform() === "ios") {
+						normalized = await resolveContentUri(v);
+					} else {
 						normalized = (await path.normalize(v)).replace(/\\/gi, "/");
 					}
 					try {
-						console.log(await stat(v));
 						const pathMd5 = md5(normalized);
 						const musicInfo = await readLocalMusicMetadata(normalized);
 
@@ -179,8 +198,11 @@ export const Component: FC = () => {
 							duration: musicInfo.duration,
 						} satisfies Song;
 					} catch (err) {
-						errored += 1;
 						console.warn("解析歌曲元数据以添加歌曲失败", normalized, err);
+						currentFailedList.push({
+							path: normalized,
+							error: err instanceof Error ? err.message : String(err),
+						});
 						return null;
 					} finally {
 						current += 1;
@@ -208,28 +230,32 @@ export const Component: FC = () => {
 			obj.songIds.unshift(...shouldAddIds);
 		});
 		toast.done(id);
-		if (errored > 0 && success > 0) {
-			toast.warn(
-				t(
-					"page.playlist.addLocalMusic.toast.partiallyFailed",
-					"已添加 {succeed, plural, other {#}} 首歌曲，其中 {errored, plural, other {#}} 首歌曲添加失败",
-					{
-						succeed: success,
-						errored,
-					},
-				),
-			);
-		} else if (success === 0) {
-			toast.error(
-				t(
-					"page.playlist.addLocalMusic.toast.allFailed",
-					"{errored, plural, other {#}} 首歌曲添加失败",
-					{
-						errored,
-					},
-				),
-			);
-		} else {
+		if (currentFailedList.length > 0) {
+			setFailedImports(currentFailedList);
+
+			if (success > 0) {
+				toast.warn(
+					t(
+						"page.playlist.addLocalMusic.toast.partiallyFailed",
+						"已添加 {succeed, plural, other {#}} 首歌曲，其中 {errored, plural, other {#}} 首歌曲添加失败",
+						{
+							succeed: success,
+							errored: currentFailedList.length,
+						},
+					),
+				);
+			} else {
+				toast.error(
+					t(
+						"page.playlist.addLocalMusic.toast.allFailed",
+						"{errored, plural, other {#}} 首歌曲添加失败",
+						{
+							errored: currentFailedList.length,
+						},
+					),
+				);
+			}
+		} else if (success > 0) {
 			toast.success(
 				t(
 					"page.playlist.addLocalMusic.toast.success",
@@ -261,18 +287,22 @@ export const Component: FC = () => {
 					);
 				});
 			}
-			await emitAudioThread("setPlaylist", {
-				songs: collected.map((v, i) => ({
-					type: "local",
-					filePath: v.filePath,
-					origOrder: i,
-				})),
-			});
-			await emitAudioThread("jumpToSong", {
-				songIndex,
+
+			const newPlaylist = collected.map((v, i) => ({
+				type: "local" as const,
+				filePath: v.filePath,
+				origOrder: i,
+			}));
+
+			setPlaylist(newPlaylist);
+			setPlayIndex(songIndex);
+			setPosition(0);
+
+			await emitAudioThread("playAudio", {
+				song: newPlaylist[songIndex],
 			});
 		},
-		[playlist],
+		[playlist, setPlaylist, setPlayIndex, setPosition],
 	);
 
 	const onDeleteSong = useCallback(
@@ -473,6 +503,76 @@ export const Component: FC = () => {
 					)}
 				</Box>
 			</Flex>
+
+			<Dialog.Root
+				open={failedImports.length > 0}
+				onOpenChange={(open) => {
+					if (!open) setFailedImports([]);
+				}}
+			>
+				<Dialog.Content style={{ maxWidth: 600 }}>
+					<Dialog.Title>
+						{t(
+							"page.playlist.addLocalMusic.dialog.failedTitle",
+							"部分歌曲导入失败",
+						)}
+					</Dialog.Title>
+					<Dialog.Description size="2" mb="4" color="gray">
+						{t(
+							"page.playlist.addLocalMusic.dialog.failedDescription",
+							"以下 {count, plural, other {#}} 首歌曲添加失败：",
+							{
+								count: failedImports.length,
+							},
+						)}
+					</Dialog.Description>
+
+					<ScrollArea
+						type="always"
+						scrollbars="vertical"
+						style={{ maxHeight: 300 }}
+					>
+						<Flex direction="column" gap="3" pr="3">
+							{failedImports.map((item, index) => (
+								<Box
+									key={index}
+									p="3"
+									style={{
+										backgroundColor: "var(--gray-a2)",
+										borderRadius: "var(--radius-3)",
+									}}
+								>
+									<Text
+										as="div"
+										size="2"
+										weight="bold"
+										style={{ wordBreak: "break-all" }}
+									>
+										{item.path}
+									</Text>
+									<Text
+										as="div"
+										size="1"
+										color="red"
+										mt="1"
+										style={{ wordBreak: "break-all" }}
+									>
+										{item.error}
+									</Text>
+								</Box>
+							))}
+						</Flex>
+					</ScrollArea>
+
+					<Flex gap="3" mt="4" justify="end">
+						<Dialog.Close>
+							<Button variant="soft" color="gray">
+								<Trans i18nKey="common.dialog.close">关闭</Trans>
+							</Button>
+						</Dialog.Close>
+					</Flex>
+				</Dialog.Content>
+			</Dialog.Root>
 		</PageContainer>
 	);
 };

@@ -3,7 +3,7 @@
 	"version": "0.2.1",
 	"description": "AMLL 的纯 JS 核心组件框架，包括歌词显示组件和背景组件等其它可以复用的组件",
 	"repository": {
-		"url": "https://github.com/Steve-xmh/applemusic-like-lyrics.git",
+		"url": "https://github.com/amll-dev/applemusic-like-lyrics.git",
 		"directory": "packages/core",
 		"type": "git"
 	},
@@ -57,7 +57,7 @@
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dts": "catalog:",
-		"vite-plugin-glsl": "^1.5.5",
+		"vite-plugin-glsl": "^1.5.6",
 		"vite-plugin-top-level-await": "^1.6.0",
 		"vite-plugin-wasm": "catalog:"
 	},
@@ -72,7 +72,7 @@
 	},
 	"dependencies": {
 		"@ungap/structured-clone": "catalog:",
-		"bezier-easing": "^2.1.0",
+		"bezier-easing": "^3.0.0",
 		"deep-freeze": "^0.0.1",
 		"gl-matrix": "4.0.0-beta.2"
 	}

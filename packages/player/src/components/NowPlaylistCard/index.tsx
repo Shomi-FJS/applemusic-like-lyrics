@@ -1,6 +1,11 @@
+import {
+	currentPlaylistAtom,
+	currentPlaylistMusicIndexAtom,
+} from "@applemusic-like-lyrics/react-full";
 import { PlayIcon } from "@radix-ui/react-icons";
 import { Avatar, Box, Flex, type FlexProps, Inset } from "@radix-ui/themes";
-import { useAtomValue } from "jotai";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
 	type FC,
 	type HTMLProps,
@@ -11,14 +16,9 @@ import {
 	useState,
 } from "react";
 import { Trans } from "react-i18next";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { db, type Song } from "../../dexie.ts";
-import { type SongData, emitAudioThread } from "../../utils/player.ts";
+import { emitAudioThread, type SongData } from "../../utils/player.ts";
 import styles from "./index.module.css";
-import {
-	currentPlaylistMusicIndexAtom,
-	currentPlaylistAtom,
-} from "@applemusic-like-lyrics/react-full";
 
 const PlaylistSongItem: FC<
 	{
@@ -28,6 +28,7 @@ const PlaylistSongItem: FC<
 > = ({ songData, className, index, ...props }) => {
 	const playlistIndex = useAtomValue(currentPlaylistMusicIndexAtom);
 	const [cover, setCover] = useState("");
+	const setPlaylistIndex = useSetAtom(currentPlaylistMusicIndexAtom);
 
 	const song: Song | null = useMemo(() => {
 		if (songData.type === "custom" && songData.songJsonData) {
@@ -75,8 +76,9 @@ const PlaylistSongItem: FC<
 				type="button"
 				className={styles.playlistSongItem}
 				onDoubleClick={() => {
-					emitAudioThread("jumpToSong", {
-						songIndex: index,
+					setPlaylistIndex(index);
+					emitAudioThread("playAudio", {
+						song: songData,
 					});
 				}}
 				aria-label={`播放 ${name} - ${artists}`}

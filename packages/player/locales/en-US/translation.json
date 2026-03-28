@@ -121,6 +121,10 @@
 		"playlist": {
 			"addLocalMusic": {
 				"allFiles": "All Files",
+				"dialog": {
+					"failedDescription": "The following {count, plural, other {#}} failed to be added:",
+					"failedTitle": "Some songs failed to import"
+				},
 				"filterName": "Audio File",
 				"label": "Add Music From Disk",
 				"toast": {
@@ -342,6 +346,34 @@
 				"enableMediaControls": {
 					"description": "目前只支持 Windows 的 SMTC",
 					"label": "启用内置播放器的媒体控件"
+				}
+			},
+			"taskbarLyric": {
+				"align": {
+					"auto": "Auto",
+					"description": "Align direction of the taskbar lyric",
+					"label": "Align direction",
+					"left": "Left",
+					"right": "Right"
+				},
+				"enable": {
+					"description": "Display the lyrics of the currently playing song on the Windows taskbar.",
+					"label": "Enable taskbar lyrics"
+				},
+				"mode": {
+					"auto": "Auto",
+					"double": "Double Line",
+					"label": "Number of lines displayed",
+					"single": "Single Line"
+				},
+				"openDevtools": "Open DevTools",
+				"subtitle": "Taskbar Lyrics",
+				"theme": {
+					"auto": "Follow taskbar",
+					"dark": "Dark",
+					"description": "Overrides the color theme of the taskbar lyric",
+					"label": "Theme setting",
+					"light": "Light"
 				}
 			}
 		},
