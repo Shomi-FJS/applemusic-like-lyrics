@@ -34,3 +34,4 @@ packages/player/src-tauri/Cargo.toml
 .trae/
 packages/packages.rar
 
+packages/player/dist/taskbar-lyric.html

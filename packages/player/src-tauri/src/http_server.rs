@@ -17,7 +17,7 @@ use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::*;
 
-use crate::player::{NOW_PLAYING, send_player_command};
+use crate::player::send_player_command;
 use crate::server::AMLLWebSocketServer;
 use crate::REMOTE_NOW_PLAYING;
 
@@ -194,29 +194,11 @@ fn emit_remote_command(state: &HttpServerState, cmd: &RemoteCommand) {
 
 async fn api_now_playing(State(state): State<HttpServerState>) -> Response {
     let info = REMOTE_NOW_PLAYING.read().ok().and_then(|guard| guard.clone());
-    if let Some(info) = info {
-        let always_on_top = state
-            .app
-            .get_webview_window("main")
-            .and_then(|w| w.is_always_on_top().ok())
-            .unwrap_or(false);
-        return Json(NowPlayingResponse {
-            title: info.title,
-            artist: info.artist,
-            album: info.album,
-            is_playing: info.is_playing,
-            always_on_top,
-            cover: info.cover,
-        })
-        .into_response();
-    }
-
-    let snapshot = NOW_PLAYING.read().ok().and_then(|guard| guard.clone());
-    let Some(snapshot) = snapshot else {
+    let Some(info) = info else {
         return StatusCode::NO_CONTENT.into_response();
     };
 
-    if snapshot.title.is_empty() && snapshot.artist.is_empty() && snapshot.album.is_empty() {
+    if info.title.is_empty() && info.artist.is_empty() && info.album.is_empty() {
         return StatusCode::NO_CONTENT.into_response();
     }
 
@@ -227,12 +209,12 @@ async fn api_now_playing(State(state): State<HttpServerState>) -> Response {
         .unwrap_or(false);
 
     Json(NowPlayingResponse {
-        title: snapshot.title,
-        artist: snapshot.artist,
-        album: snapshot.album,
-        is_playing: snapshot.is_playing,
+        title: info.title,
+        artist: info.artist,
+        album: info.album,
+        is_playing: info.is_playing,
         always_on_top,
-        cover: snapshot.cover_data_url,
+        cover: info.cover,
     })
     .into_response()
 }
@@ -252,11 +234,9 @@ async fn api_player_action(
         }
         "next" => {
             emit_remote_command(&state, &RemoteCommand::ForwardSong);
-            send_player_command(amll_player_core::AudioThreadMessage::NextSong).await;
         }
         "prev" => {
             emit_remote_command(&state, &RemoteCommand::BackwardSong);
-            send_player_command(amll_player_core::AudioThreadMessage::PrevSong).await;
         }
         _ => return StatusCode::BAD_REQUEST,
     };
@@ -275,12 +255,8 @@ async fn api_player_command(
         RemoteCommand::Resume => {
             send_player_command(amll_player_core::AudioThreadMessage::ResumeAudio).await
         }
-        RemoteCommand::ForwardSong => {
-            send_player_command(amll_player_core::AudioThreadMessage::NextSong).await
-        }
-        RemoteCommand::BackwardSong => {
-            send_player_command(amll_player_core::AudioThreadMessage::PrevSong).await
-        }
+        RemoteCommand::ForwardSong => true,
+        RemoteCommand::BackwardSong => true,
         RemoteCommand::SetVolume { volume } => {
             let v = volume.clamp(0.0, 1.0);
             send_player_command(amll_player_core::AudioThreadMessage::SetVolume { volume: v }).await

@@ -20,15 +20,12 @@ import { enableTaskbarLyricAtom } from "./states/appAtoms.ts";
 import "./i18n";
 import {
 	isLyricPageOpenedAtom,
-	LyricSizePreset,
 	lyricSizePresetAtom,
-	onClickAudioQualityTagAtom,
 	enableLyricTranslationLineAtom,
 } from "@applemusic-like-lyrics/react-full";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "react-toastify";
-import { StateConnector } from "./components/StateConnector/index.tsx";
 import { StatsComponent } from "./components/StatsComponent/index.tsx";
 import { router } from "./router.tsx";
 import {
@@ -72,7 +69,7 @@ function App() {
 	const displayLanguage = useAtomValue(displayLanguageAtom);
 	const isDarkTheme = useAtomValue(isDarkThemeAtom);
 	const hasBackground = useAtomValue(hasBackgroundAtom);
-	const { i18n, t } = useTranslation();
+	const { i18n } = useTranslation();
 
 	useEffect(() => {
 		const unlisten = listen("remote-http-command", (event: any) => {

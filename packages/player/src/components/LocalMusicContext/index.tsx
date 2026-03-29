@@ -499,6 +499,7 @@ export const LocalMusicContext: FC = () => {
 						const musicArtists = store.get(musicArtistsAtom);
 						const musicAlbum = store.get(musicAlbumNameAtom);
 						const musicCover = store.get(musicCoverAtom);
+						const isPlaying = store.get(musicPlayingAtom);
 
 						if (musicName && musicArtists.length > 0) {
 							invoke("update_remote_now_playing", {
@@ -506,7 +507,7 @@ export const LocalMusicContext: FC = () => {
 									title: musicName,
 									artist: musicArtists.map((a) => a.name).join("/"),
 									album: musicAlbum,
-									isPlaying: status.isPlaying,
+									isPlaying,
 									cover: musicCover,
 								},
 							}).catch((err) => {
@@ -514,9 +515,6 @@ export const LocalMusicContext: FC = () => {
 							});
 						}
 					}
-
-					store.set(musicDurationAtom, (status.duration * 1000) | 0);
-					store.set(musicPlayingPositionAtom, (status.position * 1000) | 0);
 					break;
 				}
 
