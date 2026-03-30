@@ -2,7 +2,7 @@ import { Box, Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import classNames from "classnames";
 import { useAtomValue, useStore } from "jotai";
-import { lazy, StrictMode, Suspense, useLayoutEffect, useEffect } from "react";
+import { lazy, StrictMode, Suspense, useEffect, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
@@ -19,9 +19,9 @@ import { WSProtocolMusicContext } from "./components/WSProtocolMusicContext/inde
 import { enableTaskbarLyricAtom } from "./states/appAtoms.ts";
 import "./i18n";
 import {
+	enableLyricTranslationLineAtom,
 	isLyricPageOpenedAtom,
 	lyricSizePresetAtom,
-	enableLyricTranslationLineAtom,
 } from "@applemusic-like-lyrics/react-full";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -43,6 +43,9 @@ import { useInitializeWindow } from "./utils/useInitializeWindow.ts";
 const ExtensionContext = lazy(() => import("./components/ExtensionContext"));
 const AMLLWrapper = lazy(() => import("./components/AMLLWrapper"));
 
+const STARTUP_DISCLAIMER_NOTICE =
+	"免责声明与更新通告：\n特此声明：本项目的部分模块经 @Shomi-FJS 重新设计、调整。所有变更衍生功能、代码修改均为独立行为，与原始上游组织无涉责任，相关责任由本维护方独立承担。将根据更新周期，定期同步上游版本。谢谢~";
+
 function App() {
 	const store = useStore();
 
@@ -60,6 +63,23 @@ function App() {
 		if (import.meta.env.DEV) {
 			setTimeout(showWindow, 150);
 		}
+	}, []);
+
+	useEffect(() => {
+		toast.info(
+			<div
+				style={{
+					whiteSpace: "pre-line",
+					lineHeight: 1.5,
+				}}
+			>
+				{STARTUP_DISCLAIMER_NOTICE}
+			</div>,
+			{
+				containerId: "top-right-toast",
+				autoClose: 5000,
+			},
+		);
 	}, []);
 
 	const isLyricPageOpened = useAtomValue(isLyricPageOpenedAtom);
