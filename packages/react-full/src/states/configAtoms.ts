@@ -255,6 +255,24 @@ export const showLyricContributorAtom = atomWithStorage(
 	true,
 );
 
+/**
+ * 歌词贡献者查询源。
+ * - `mirror`: 使用镜像源查询。
+ * - `local`: 使用本地源查询（需手动下载缓存服务）。
+ */
+export enum ContributorSource {
+	Mirror = "mirror",
+	Local = "local",
+}
+
+/**
+ * 歌词贡献者查询源设置。
+ */
+export const contributorSourceAtom = atomWithStorage<ContributorSource>(
+	"amll-react-full.contributorSource",
+	ContributorSource.Mirror,
+);
+
 // ==================================================================
 //                        歌词背景配置
 // ==================================================================

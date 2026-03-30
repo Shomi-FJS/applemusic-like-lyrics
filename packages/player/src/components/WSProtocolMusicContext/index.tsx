@@ -28,6 +28,7 @@ import {
 	onToggleShuffleAtom,
 	RepeatMode,
 	repeatModeAtom,
+	showLyricContributorAtom,
 } from "@applemusic-like-lyrics/react-full";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -130,6 +131,7 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 	const store = useStore();
 	const { t } = useTranslation();
 	const fftPlayer = useRef<FFTPlayer | undefined>(undefined);
+	const contributorFetchTimerRef = useRef<number | null>(null);
 	const fftDataRange = useAtomValue(fftDataRangeAtom);
 
 	useEffect(() => {
@@ -268,19 +270,31 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 				case "pause":
 					return t("ws-protocol.remoteCommand.pause", "远程用户执行：暂停");
 				case "resume":
-					return t("ws-protocol.remoteCommand.resume", "远程用户执行：继续播放");
+					return t(
+						"ws-protocol.remoteCommand.resume",
+						"远程用户执行：继续播放",
+					);
 				case "forwardSong":
 					return t("ws-protocol.remoteCommand.next", "远程用户执行：下一首");
 				case "backwardSong":
 					return t("ws-protocol.remoteCommand.prev", "远程用户执行：上一首");
 				case "setVolume":
-					return t("ws-protocol.remoteCommand.volume", "远程用户执行：调整音量");
+					return t(
+						"ws-protocol.remoteCommand.volume",
+						"远程用户执行：调整音量",
+					);
 				case "seekPlayProgress":
 					return t("ws-protocol.remoteCommand.seek", "远程用户执行：调整进度");
 				case "setRepeatMode":
-					return t("ws-protocol.remoteCommand.repeat", "远程用户执行：切换循环模式");
+					return t(
+						"ws-protocol.remoteCommand.repeat",
+						"远程用户执行：切换循环模式",
+					);
 				case "setShuffleMode":
-					return t("ws-protocol.remoteCommand.shuffle", "远程用户执行：切换随机模式");
+					return t(
+						"ws-protocol.remoteCommand.shuffle",
+						"远程用户执行：切换随机模式",
+					);
 				default:
 					return null;
 			}
@@ -304,7 +318,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			},
 		);
 
-		let curCoverBlobUrl = "";
 		const onBodyChannel = new Channel<WSPayload>();
 
 		function updateRemoteNowPlaying() {
@@ -318,7 +331,11 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			const musicCover = store.get(musicCoverAtom);
 			const musicPlaying = store.get(musicPlayingAtom);
 
-			if (!musicName || musicName === "等待连接中" || musicArtists.length === 0) {
+			if (
+				!musicName ||
+				musicName === "等待连接中" ||
+				musicArtists.length === 0
+			) {
 				return;
 			}
 
@@ -368,42 +385,63 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 					);
 					store.set(musicPlayingPositionAtom, 0);
 					store.set(lyricContributorAtom, null);
-					if (currentMusicId && /^\d+$/.test(currentMusicId)) {
-						fetchLyricContributorByNCMId(currentMusicId)
-							.then((result) => {
-								const latestMusicId = store.get(musicIdAtom);
-								const currentContributor = store.get(lyricContributorAtom);
-								if (result.contributor && latestMusicId === currentMusicId && !currentContributor) {
-									store.set(lyricContributorAtom, result.contributor);
-								}
-							})
-							.catch((err) => {
-								console.error("获取贡献者失败:", err);
-							});
+					if (contributorFetchTimerRef.current !== null) {
+						window.clearTimeout(contributorFetchTimerRef.current);
+						contributorFetchTimerRef.current = null;
+					}
+					if (
+						store.get(showLyricContributorAtom) &&
+						currentMusicId &&
+						/^\d+$/.test(currentMusicId)
+					) {
+						contributorFetchTimerRef.current = window.setTimeout(() => {
+							fetchLyricContributorByNCMId(currentMusicId)
+								.then((result) => {
+									const latestMusicId = store.get(musicIdAtom);
+									if (result.contributor && latestMusicId === currentMusicId) {
+										store.set(lyricContributorAtom, result.contributor);
+									}
+								})
+								.catch((err) => {
+									console.error("获取贡献者失败:", err);
+								})
+								.finally(() => {
+									contributorFetchTimerRef.current = null;
+								});
+						}, 120);
 					}
 					updateRemoteNowPlaying();
 					break;
 				}
 				case "setCover": {
-					if (curCoverBlobUrl) {
-						URL.revokeObjectURL(curCoverBlobUrl);
-						curCoverBlobUrl = "";
-					}
-
+					console.log("Received setCover message:", state);
 					if (state.source === "uri") {
+						console.log("Setting cover from URI:", state.url);
 						store.set(musicCoverAtom, state.url);
 					} else {
-						const { mimeType, data: base64Data } = state.image;
-						const binaryString = atob(base64Data);
-						const bytes = new Uint8Array(binaryString.length);
-						for (let i = 0; i < binaryString.length; i++) {
-							bytes[i] = binaryString.charCodeAt(i);
-						}
-						const blob = new Blob([bytes], { type: mimeType });
+						try {
+							const { mimeType, data: base64Data } = state.image;
+							console.log(
+								"Setting cover from base64, mimeType:",
+								mimeType,
+								"data length:",
+								base64Data.length,
+							);
 
-						const url = URL.createObjectURL(blob);
-						curCoverBlobUrl = url;
-						store.set(musicCoverAtom, url);
+							if (!base64Data || base64Data.length === 0) {
+								console.error("Cover base64 data is empty");
+								store.set(musicCoverAtom, "");
+								break;
+							}
+
+							// Use data URL instead of blob URL to avoid "Not allowed to load local resource" error
+							const dataUrl = `data:${mimeType};base64,${base64Data}`;
+							console.log("Created data URL for cover");
+							store.set(musicCoverAtom, dataUrl);
+						} catch (error) {
+							console.error("Failed to create cover data URL:", error);
+							store.set(musicCoverAtom, "");
+						}
 					}
 					updateRemoteNowPlaying();
 					break;
@@ -505,6 +543,11 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			invoke("ws_reopen_connection", { addr, channel: onBodyChannel });
 		});
 		return () => {
+			if (contributorFetchTimerRef.current !== null) {
+				window.clearTimeout(contributorFetchTimerRef.current);
+				contributorFetchTimerRef.current = null;
+			}
+
 			unlistenConnected.then((u) => u());
 			unlistenDisconnected.then((u) => u());
 			unlistenRemoteHttp.then((u) => u());
@@ -521,11 +564,6 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 			store.set(onClickControlThumbAtom, doNothing);
 			store.set(onToggleShuffleAtom, doNothing);
 			store.set(onCycleRepeatModeAtom, doNothing);
-
-			if (curCoverBlobUrl) {
-				URL.revokeObjectURL(curCoverBlobUrl);
-				curCoverBlobUrl = "";
-			}
 
 			if (!isLyricOnly) {
 				store.set(musicNameAtom, "");

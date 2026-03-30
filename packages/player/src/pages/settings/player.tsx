@@ -7,6 +7,8 @@ import {
 	PixiRenderer,
 } from "@applemusic-like-lyrics/core";
 import {
+	ContributorSource,
+	contributorSourceAtom,
 	cssBackgroundPropertyAtom,
 	enableLyricLineBlurEffectAtom,
 	enableLyricLineScaleEffectAtom,
@@ -57,6 +59,7 @@ import {
 } from "@radix-ui/themes";
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-shell";
 import { atom, useAtom, useAtomValue, type WritableAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import React, {
@@ -64,6 +67,7 @@ import React, {
 	type PropsWithChildren,
 	type ReactNode,
 	Suspense,
+	useEffect,
 	useLayoutEffect,
 	useMemo,
 	useState,
@@ -86,10 +90,14 @@ import {
 	updateInfoAtom,
 } from "../../states/appAtoms.ts";
 import { restartApp } from "../../utils/player.ts";
+import {
+	type ContributorSourceMode,
+	setContributorSource as setContributorSourceMode,
+} from "../../utils/ttml-contributor-search.ts";
 import styles from "./index.module.css";
 
 const SettingEntry: FC<
-	PropsWithChildren<{ label: string; description?: string }>
+	PropsWithChildren<{ label: string; description?: ReactNode }>
 > = ({ label, description, children }) => {
 	return (
 		<Card mt="2">
@@ -307,9 +315,7 @@ const GeneralSettings = () => {
 	const [localIps, setLocalIps] = useState<string[]>([]);
 
 	useLayoutEffect(() => {
-		invoke<string[]>("get_local_ips")
-			.then(setLocalIps)
-			.catch(console.error);
+		invoke<string[]>("get_local_ips").then(setLocalIps).catch(console.error);
 	}, []);
 
 	const supportedLanguagesMenu = useMemo(() => {
@@ -445,6 +451,31 @@ const GeneralSettings = () => {
 
 const LyricContentSettings = () => {
 	const { t } = useTranslation();
+	const [contributorSource, setContributorSource] = useAtom(
+		contributorSourceAtom,
+	);
+	useEffect(() => {
+		setContributorSourceMode(contributorSource as ContributorSourceMode);
+	}, [contributorSource]);
+	const contributorSourceMenu = useMemo(
+		() => [
+			{
+				label: t(
+					"page.settings.lyricContent.contributorSource.menu.mirror",
+					"镜像源（By @GBCLStudio）",
+				),
+				value: ContributorSource.Mirror,
+			},
+			{
+				label: t(
+					"page.settings.lyricContent.contributorSource.menu.local",
+					"本地源（缓存服务-需手动下载服务）",
+				),
+				value: ContributorSource.Local,
+			},
+		],
+		[t],
+	);
 	return (
 		<>
 			<SubTitle>
@@ -486,6 +517,54 @@ const LyricContentSettings = () => {
 				)}
 				configAtom={showLyricContributorAtom}
 			/>
+			<SettingEntry
+				label={t(
+					"page.settings.lyricContent.contributorSource.label",
+					"贡献者查询方式",
+				)}
+				description={
+					<>
+						{t(
+							"page.settings.lyricContent.contributorSource.description.part1",
+							"使用镜像源在歌词响应更快，减少闪烁情况，如需使用本地源请前往",
+						)}
+						<a
+							href="#"
+							onClick={(e) => {
+								e.preventDefault();
+								open("https://github.com/Shomi-FJS/Lyric-Atlas-API");
+							}}
+							style={{
+								color: "inherit",
+								textDecoration: "underline",
+								cursor: "pointer",
+							}}
+						>
+							https://github.com/Shomi-FJS/Lyric-Atlas-API
+						</a>
+						{t(
+							"page.settings.lyricContent.contributorSource.description.part2",
+							" 下载",
+						)}
+					</>
+				}
+			>
+				<Select.Root
+					value={contributorSource}
+					onValueChange={(value) =>
+						setContributorSource(value as ContributorSource)
+					}
+				>
+					<Select.Trigger />
+					<Select.Content>
+						{contributorSourceMenu.map((item) => (
+							<Select.Item key={item.value} value={item.value}>
+								{item.label}
+							</Select.Item>
+						))}
+					</Select.Content>
+				</Select.Root>
+			</SettingEntry>
 		</>
 	);
 };

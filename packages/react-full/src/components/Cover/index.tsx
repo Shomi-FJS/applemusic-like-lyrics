@@ -49,6 +49,7 @@ export const Cover = forwardRef<
 			[className, musicPaused],
 		);
 		const videoRef = useRef<HTMLVideoElement>(null);
+
 		useEffect(() => {
 			const videoEl = videoRef.current;
 			if (videoEl) {
@@ -113,7 +114,10 @@ export const Cover = forwardRef<
 							alt="cover"
 							style={
 								{
-									backgroundImage: `url(${coverUrl})`,
+									backgroundImage: coverUrl ? `url(${coverUrl})` : "none",
+									backgroundSize: "cover",
+									backgroundPosition: "center",
+									backgroundRepeat: "no-repeat",
 									"--scale-level": pauseShrinkAspect ?? 0.75,
 								} as React.CSSProperties
 							}

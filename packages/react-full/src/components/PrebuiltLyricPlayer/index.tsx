@@ -253,13 +253,40 @@ const manualSeekTriggerAtom = atom<{ time: number; timestamp: number } | null>(
 	null,
 );
 
+const LyricContributorBadge: FC = React.memo(() => {
+	const lyricContributor = useAtomValue(lyricContributorAtom);
+	const showLyricContributor = useAtomValue(showLyricContributorAtom);
+
+	if (!showLyricContributor || !lyricContributor) {
+		return null;
+	}
+
+	return (
+		<motion.div
+			key="lyric-contributor"
+			initial={{ opacity: 0, scale: 0.8 }}
+			animate={{ opacity: 1, scale: 1 }}
+			exit={{ opacity: 0, scale: 0.8 }}
+			style={{
+				fontSize: "11px",
+				color: "rgba(255, 255, 255, 0.6)",
+				padding: "2px 6px",
+				background: "rgba(255, 255, 255, 0.08)",
+				borderRadius: "4px",
+				display: "flex",
+				alignItems: "center",
+			}}
+		>
+			歌词贡献者：@{lyricContributor}
+		</motion.div>
+	);
+});
+
 const PrebuiltProgressBar: FC = React.memo(() => {
 	const musicDuration = useAtomValue(musicDurationAtom);
 	const musicPosition = useAtomValue(musicPlayingPositionAtom);
 	const musicIsPlaying = useAtomValue(musicPlayingAtom);
 	const musicQualityTag = useAtomValue(musicQualityTagAtom);
-	const lyricContributor = useAtomValue(lyricContributorAtom);
-	const showLyricContributor = useAtomValue(showLyricContributorAtom);
 	const onClickAudioQualityTag = useAtomValue(
 		onClickAudioQualityTagAtom,
 	).onEmit;
@@ -299,27 +326,16 @@ const PrebuiltProgressBar: FC = React.memo(() => {
 				<div style={fontStyle}>
 					<TimeLabel />
 				</div>
-				<div style={{ display: "flex", gap: "8px", alignItems: "center", whiteSpace: "nowrap" }}>
+				<div
+					style={{
+						display: "flex",
+						gap: "8px",
+						alignItems: "center",
+						whiteSpace: "nowrap",
+					}}
+				>
 					<AnimatePresence mode="popLayout">
-						{showLyricContributor && lyricContributor && (
-							<motion.div
-								key="lyric-contributor"
-								initial={{ opacity: 0, scale: 0.8 }}
-								animate={{ opacity: 1, scale: 1 }}
-								exit={{ opacity: 0, scale: 0.8 }}
-								style={{
-									fontSize: "11px",
-									color: "rgba(255, 255, 255, 0.6)",
-									padding: "2px 6px",
-									background: "rgba(255, 255, 255, 0.08)",
-									borderRadius: "4px",
-									display: "flex",
-									alignItems: "center",
-								}}
-							>
-								歌词贡献者：@{lyricContributor}
-							</motion.div>
-						)}
+						<LyricContributorBadge />
 					</AnimatePresence>
 					<AnimatePresence mode="popLayout">
 						{musicQualityTag && (
