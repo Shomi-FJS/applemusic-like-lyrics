@@ -92,6 +92,12 @@ export class LyricLineEl extends LyricLineBase {
 	private targetBrightAlpha = 1.0;
 	private targetDarkAlpha = 0.2;
 
+	// Unicode 标准的 Grapheme Cluster 分割器
+	// 用于正确处理 emoji、复合字符等
+	private segmenter = new Intl.Segmenter(undefined, {
+		granularity: "grapheme",
+	});
+
 	constructor(
 		private lyricPlayer: DomLyricPlayer,
 		private lyricLine: LyricLine = {
@@ -471,9 +477,9 @@ export class LyricLineEl extends LyricLineBase {
 
 		if (shouldEmphasize) {
 			mainWordEl.classList.add(styles.emphasize);
-			for (const char of displayWord.trim()) {
+			for (const { segment } of this.segmenter.segment(displayWord.trim())) {
 				const charEl = document.createElement("span");
-				charEl.innerText = char;
+				charEl.innerText = segment;
 				subElements.push(charEl);
 				wordContainer.appendChild(charEl);
 			}

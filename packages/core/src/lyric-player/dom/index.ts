@@ -170,8 +170,6 @@ export class DomLyricPlayer extends LyricPlayerBase {
 		}
 		if (!this.isPageVisible) return;
 		const deltaS = delta / 1000;
-		this.interludeDots.update(delta);
-		this.bottomLine.update(deltaS);
 		for (const line of this.currentLyricLineObjects) {
 			line.update(deltaS);
 		}

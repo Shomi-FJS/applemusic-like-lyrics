@@ -15,8 +15,14 @@ export class BottomLineEl implements HasElement, Disposable {
 		posX: new Spring(0),
 		posY: new Spring(0),
 	};
+	private isFocused = false;
+	private blur = 0;
 	constructor(private lyricPlayer: LyricPlayerBase) {
-		this.element.setAttribute("class", styles.lyricLine);
+		this.element.setAttribute(
+			"class",
+			`${styles.lyricLine} ${styles.bottomLine}`,
+		);
+		this.element.dataset.bottomLine = "true";
 		this.rebuildStyle();
 	}
 	async measureSize(): Promise<[number, number]> {
@@ -33,6 +39,16 @@ export class BottomLineEl implements HasElement, Disposable {
 	hide() {
 		this.rebuildStyle();
 	}
+	setFocused(focused: boolean) {
+		if (this.isFocused !== focused) {
+			this.isFocused = focused;
+			if (focused) {
+				this.element.dataset.focused = "true";
+			} else {
+				delete this.element.dataset.focused;
+			}
+		}
+	}
 	private rebuildStyle() {
 		let style = `transform:translate(${this.lineTransforms.posX
 			.getCurrentPosition()
@@ -42,6 +58,8 @@ export class BottomLineEl implements HasElement, Disposable {
 		if (!this.lyricPlayer.getEnableSpring() && this.isInSight) {
 			style += `transition-delay:${this.delay}ms;`;
 		}
+
+		style += `filter:blur(${Math.min(5, this.blur)}px);`;
 		if (style !== this.lastStyle) {
 			this.lastStyle = style;
 			this.element.setAttribute("style", style);
@@ -53,13 +71,16 @@ export class BottomLineEl implements HasElement, Disposable {
 	setTransform(
 		left: number = this.left,
 		top: number = this.top,
+		blur = 0,
 		force = false,
 		delay = 0,
 	) {
 		this.left = left;
 		this.top = top;
 		this.delay = (delay * 1000) | 0;
+
 		if (force || !this.lyricPlayer.getEnableSpring()) {
+			this.blur = Math.min(32, blur);
 			if (force) this.element.classList.add(styles.tmpDisableTransition);
 			this.lineTransforms.posX.setPosition(left);
 			this.lineTransforms.posY.setPosition(top);
@@ -70,6 +91,7 @@ export class BottomLineEl implements HasElement, Disposable {
 					this.element.classList.remove(styles.tmpDisableTransition);
 				});
 		} else {
+			this.blur = Math.min(5, blur);
 			this.lineTransforms.posX.setTargetPosition(left, delay);
 			this.lineTransforms.posY.setTargetPosition(top, delay);
 		}

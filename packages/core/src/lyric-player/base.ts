@@ -156,6 +156,7 @@ export abstract class LyricPlayerBase
 	}) as ResizeObserverCallback);
 	protected wordFadeWidth = 0.5;
 	protected targetAlignIndex = 0;
+	protected lastInterludeState = false;
 
 	constructor(element?: HTMLElement) {
 		super();
@@ -777,6 +778,46 @@ export abstract class LyricPlayerBase
 		this.lastCurrentTime = time;
 	}
 
+	protected updateDynamicSpringParams() {
+		if (!this.getEnableSpring() || this.processedLines.length === 0) return;
+
+		const currentIndex = this.scrollToIndex;
+		const currentLine = this.processedLines[currentIndex];
+		const prevLine = this.processedLines[currentIndex - 1];
+
+		if (currentLine && prevLine) {
+			const interval =
+				currentLine.startTime -
+				(prevLine?.words[0]?.startTime ?? prevLine.startTime);
+
+			const MIN_INTERVAL = 100;
+			const MAX_INTERVAL = 800;
+			const clampedInterval = Math.max(
+				MIN_INTERVAL,
+				Math.min(MAX_INTERVAL, interval),
+			);
+
+			const MAX_STIFFNESS = 220;
+			const MIN_STIFFNESS = 170;
+
+			let ratio =
+				1 - (clampedInterval - MIN_INTERVAL) / (MAX_INTERVAL - MIN_INTERVAL);
+
+			ratio = ratio ** 0.2;
+
+			const targetStiffness =
+				MIN_STIFFNESS + ratio * (MAX_STIFFNESS - MIN_STIFFNESS);
+
+			const dampingMultiplier = 2.2;
+			const targetDamping = Math.sqrt(targetStiffness) * dampingMultiplier;
+
+			this.setLinePosYSpringParams({
+				stiffness: targetStiffness,
+				damping: targetDamping,
+			});
+		}
+	}
+
 	/**
 	 * 重新布局定位歌词行的位置，调用完成后再逐帧调用 `update`
 	 * 函数即可让歌词通过动画移动到目标位置。
@@ -796,6 +837,23 @@ export abstract class LyricPlayerBase
 	 */
 	async calcLayout(sync = false, force = false) {
 		const interlude = this.getCurrentInterlude();
+		const isInterludeActive = !!interlude;
+
+		if (
+			this.targetAlignIndex !== this.scrollToIndex ||
+			this.lastInterludeState !== isInterludeActive
+		) {
+			this.lastInterludeState = isInterludeActive;
+
+			if (this.isSeeking) {
+				this.setLinePosYSpringParams({ stiffness: 90, damping: 15 });
+			} else if (isInterludeActive) {
+				this.setLinePosYSpringParams({ stiffness: 90, damping: 15 });
+			} else {
+				this.updateDynamicSpringParams();
+			}
+		}
+
 		let curPos = -this.scrollOffset;
 		const targetAlignIndex = this.scrollToIndex;
 		let isNextDuet = false;
@@ -831,15 +889,26 @@ export abstract class LyricPlayerBase
 		curPos += this.size[1] * this.alignPosition;
 		const curLine = this.currentLyricLineObjects[targetAlignIndex];
 		this.targetAlignIndex = targetAlignIndex;
+
+		const isBottomFocused =
+			targetAlignIndex === this.currentLyricLineObjects.length;
+		this.bottomLine.setFocused(isBottomFocused);
+
+		let targetLineHeight = 0;
 		if (curLine) {
-			const lineHeight =
+			targetLineHeight =
 				this.lyricLinesSize.get(curLine)?.[1] ?? LINE_HEIGHT_FALLBACK;
+		} else if (isBottomFocused) {
+			targetLineHeight = this.bottomLine.lineSize[1];
+		}
+
+		if (targetLineHeight > 0) {
 			switch (this.alignAnchor) {
 				case "bottom":
-					curPos -= lineHeight;
+					curPos -= targetLineHeight;
 					break;
 				case "center":
-					curPos -= lineHeight / 2;
+					curPos -= targetLineHeight / 2;
 					break;
 				case "top":
 					break;
@@ -898,25 +967,9 @@ export abstract class LyricPlayerBase
 				}
 			}
 
-			let blurLevel = 0;
-
-			if (this.enableBlur) {
-				if (isActive) {
-					blurLevel = 0;
-				} else {
-					blurLevel = 1;
-					if (i < this.scrollToIndex) {
-						blurLevel += Math.abs(this.scrollToIndex - i) + 1;
-					} else {
-						blurLevel += Math.abs(
-							i - Math.max(this.scrollToIndex, latestIndex),
-						);
-					}
-				}
-			}
+			const blurLevel = this.calculateBlur(i, isActive, latestIndex);
 
 			const SCALE_ASPECT = this.enableScale ? 97 : 100;
-
 			let targetScale = 100;
 
 			if (!isActive && this.isPlaying) {
@@ -925,10 +978,6 @@ export abstract class LyricPlayerBase
 				} else {
 					targetScale = SCALE_ASPECT;
 				}
-			}
-
-			if (this.isUserScrolling) {
-				blurLevel = 0;
 			}
 
 			const renderMode = isActive
@@ -957,8 +1006,37 @@ export abstract class LyricPlayerBase
 			}
 		});
 		this.scrollBoundary[1] = curPos + this.scrollOffset - this.size[1] / 2;
-		// console.groupEnd();
-		this.bottomLine.setTransform(0, curPos, force, delay);
+
+		const bottomIndex = this.currentLyricLineObjects.length;
+		const finalBottomBlur = this.calculateBlur(
+			bottomIndex,
+			isBottomFocused,
+			latestIndex,
+		);
+
+		this.bottomLine.setTransform(0, curPos, finalBottomBlur, force, delay);
+	}
+
+	protected calculateBlur(
+		itemIndex: number,
+		isActive: boolean,
+		latestIndex: number,
+	): number {
+		if (!this.enableBlur || this.isUserScrolling || isActive) {
+			return 0;
+		}
+
+		let blurLevel = 1;
+
+		if (itemIndex < this.scrollToIndex) {
+			blurLevel += Math.abs(this.scrollToIndex - itemIndex) + 1;
+		} else {
+			blurLevel += Math.abs(
+				itemIndex - Math.max(this.scrollToIndex, latestIndex),
+			);
+		}
+
+		return window.innerWidth <= 1024 ? blurLevel * 0.8 : blurLevel;
 	}
 
 	/**
