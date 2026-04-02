@@ -19,19 +19,5 @@ target/
 *.tsbuildinfo
 .million/
 vendor/
-packages/player/updater-key.pub
-packages/player/updater-key
-packages/player/dist/index.html
-packages/player/dist/git-metadata.json
-packages/player/dist/vite.svg
-.gitignore
-packages/player/dist/tauri.svg
-packages/player/dist/screenshot.html
-pnpm-lock.yaml
-pnpm-lock.yaml
-packages/player/src-tauri/Cargo.toml
 .vs/
-.trae/
-packages/packages.rar
 
-packages/player/dist/taskbar-lyric.html
