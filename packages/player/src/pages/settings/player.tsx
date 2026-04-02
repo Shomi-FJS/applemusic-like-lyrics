@@ -60,6 +60,7 @@ import {
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
+import { platform } from "@tauri-apps/plugin-os";
 import { atom, useAtom, useAtomValue, type WritableAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import React, {
@@ -313,9 +314,14 @@ const GeneralSettings = () => {
 	const { t, i18n } = useTranslation();
 	const [mode, setMode] = useAtom(darkModeAtom);
 	const [localIps, setLocalIps] = useState<string[]>([]);
+	const [os, setOs] = useState<string | null>(null);
 
 	useLayoutEffect(() => {
 		invoke<string[]>("get_local_ips").then(setLocalIps).catch(console.error);
+	}, []);
+
+	useEffect(() => {
+		setOs(platform());
 	}, []);
 
 	const supportedLanguagesMenu = useMemo(() => {
@@ -423,7 +429,7 @@ const GeneralSettings = () => {
 					</Select.Content>
 				</Select.Root>
 			</SettingEntry>
-			<SwitchSettings
+		<SwitchSettings
 				label={t(
 					"page.settings.general.remoteHttpServer.label",
 					"启用 13533 端口控制服务",
@@ -434,17 +440,19 @@ const GeneralSettings = () => {
 				)}${localIps.length > 0 ? `\n本机 IP:\n${localIps.join("\n")}` : ""}`}
 				configAtom={enableHttpServerAtom}
 			/>
-			<SwitchSettings
-				label={t(
-					"page.settings.general.windowAlwaysOnTop.label",
-					"启用窗口置顶",
-				)}
-				description={t(
-					"page.settings.general.windowAlwaysOnTop.description",
-					"将应用窗口设置为始终置顶",
-				)}
-				configAtom={enableAlwaysOnTopAtom}
-			/>
+			{os === "windows" && (
+				<SwitchSettings
+					label={t(
+						"page.settings.general.windowAlwaysOnTop.label",
+						"启用窗口置顶",
+					)}
+					description={t(
+						"page.settings.general.windowAlwaysOnTop.description",
+						"将应用窗口设置为始终置顶",
+					)}
+					configAtom={enableAlwaysOnTopAtom}
+				/>
+			)}
 		</>
 	);
 };

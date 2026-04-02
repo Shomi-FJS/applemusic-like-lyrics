@@ -138,11 +138,11 @@ fn set_window_always_on_top<R: Runtime>(
     }
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-    if let Some(window) = app.get_webview_window("main") {
-        window.set_always_on_top(enabled).map_err(|e| e.to_string())
-    } else {
-        Err("Main window not found.".to_string())
-    }
+        if let Some(window) = app.get_webview_window("main") {
+            window.set_always_on_top(enabled).map_err(|e| e.to_string())
+        } else {
+            Err("Main window not found.".to_string())
+        }
     }
 }
 
@@ -483,6 +483,8 @@ pub fn run() {
             restart_app,
             reset_window_theme,
             get_local_ips,
+            #[cfg(target_os = "windows")]
+            set_window_always_on_top,
             #[cfg(target_os = "windows")]
             taskbar_lyric::mouse_forward::set_click_interception,
             #[cfg(target_os = "windows")]
