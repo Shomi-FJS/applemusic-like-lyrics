@@ -165,7 +165,7 @@ function tryAdvanceStartTime(lines: LyricLine[]) {
 			const originallyHadGap = line.startTime >= prevLine.endTime;
 
 			if (originallyHadGap) {
-				targetAdvanceAmount = 1000;
+				targetAdvanceAmount = 600;
 				safeBoundary = prevLine.endTime;
 			} else {
 				targetAdvanceAmount = 400;
@@ -173,7 +173,7 @@ function tryAdvanceStartTime(lines: LyricLine[]) {
 				safeBoundary = prevLine.startTime + prevDuration * 0.3;
 			}
 		} else {
-			targetAdvanceAmount = 1000;
+			targetAdvanceAmount = 600;
 			safeBoundary = 0;
 		}
 
