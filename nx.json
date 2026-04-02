@@ -1,44 +1,59 @@
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": [
-          "build:dev",
-          "build"
-        ]
-      }
-    }
-  },
-  "targetDefaults": {
-    "fmt": {
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/src"
-      ]
-    },
-    "build": {
-      "cache": true,
-      "dependsOn": [
-        "^build"
-      ],
-      "maxParallel": 1,
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/pkg"
-      ]
-    },
-    "build:dev": {
-      "cache": true,
-      "dependsOn": [
-        "^build:dev"
-      ],
-      "maxParallel": 1,
-      "outputs": [
-        "{projectRoot}/dist",
-        "{projectRoot}/pkg"
-      ]
-    }
-  },
-  "analytics": true
+	"tasksRunnerOptions": {
+		"default": {
+			"runner": "nx/tasks-runners/default",
+			"options": {
+				"cacheableOperations": ["build:dev", "build"]
+			}
+		}
+	},
+	"targetDefaults": {
+		"fmt": {
+			"cache": true,
+			"outputs": ["{projectRoot}/src"]
+		},
+		"build": {
+			"cache": true,
+			"dependsOn": ["^build"],
+			"maxParallel": 1,
+			"outputs": ["{projectRoot}/dist", "{projectRoot}/pkg"]
+		},
+		"build:dev": {
+			"cache": true,
+			"dependsOn": ["^build:dev"],
+			"maxParallel": 1,
+			"outputs": ["{projectRoot}/dist", "{projectRoot}/pkg"]
+		}
+	},
+	"analytics": false,
+	"release": {
+		"versionPlans": true,
+		"projectsRelationship": "independent",
+		"projects": [
+			"packages/core",
+			"packages/react",
+			"packages/react-full",
+			"packages/vue",
+			"packages/fft",
+			"packages/lyric",
+			"packages/ttml",
+			"packages/ws-protocol"
+		]
+	},
+	"plugins": [
+		{
+			"plugin": "@nx/js/typescript",
+			"options": {
+				"typecheck": {
+					"targetName": "typecheck"
+				},
+				"build": {
+					"targetName": "build",
+					"configName": "tsconfig.lib.json",
+					"buildDepsName": "build-deps",
+					"watchDepsName": "watch-deps"
+				}
+			}
+		}
+	]
 }
