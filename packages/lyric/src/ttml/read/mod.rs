@@ -24,6 +24,7 @@ pub fn parse_ttml_js(src: &str) -> JsValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::LyricLine;
 
     #[test]
     fn test_ttml() {

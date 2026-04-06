@@ -25,15 +25,14 @@ pub fn read_audio_info(input_ctx: &mut ffmpeg::format::context::Input) -> AudioI
         if stream
             .disposition()
             .contains(ffmpeg::format::stream::Disposition::ATTACHED_PIC)
+            && let Some(data) = packet.data()
         {
-            if let Some(data) = packet.data() {
-                new_audio_info.cover = Some(data.to_vec());
-                let codec_name = ffmpeg::codec::decoder::find(stream.parameters().id())
-                    .map(|d| d.name().to_string())
-                    .unwrap_or("unknown".to_string());
-                new_audio_info.cover_media_type = format!("image/{}", codec_name.to_lowercase());
-                break 'outer;
-            }
+            new_audio_info.cover = Some(data.to_vec());
+            let codec_name = ffmpeg::codec::decoder::find(stream.parameters().id())
+                .map(|d| d.name().to_string())
+                .unwrap_or("unknown".to_string());
+            new_audio_info.cover_media_type = format!("image/{}", codec_name.to_lowercase());
+            break 'outer;
         }
     }
 

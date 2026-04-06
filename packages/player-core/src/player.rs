@@ -97,7 +97,7 @@ impl AudioPlayer {
     pub fn new(_config: AudioPlayerConfig, handle: OutputStream) -> Self {
         let (evt_sender, evt_receiver) = tokio::sync::mpsc::unbounded_channel();
         let (msg_sender, msg_receiver) = tokio::sync::mpsc::unbounded_channel();
-        let sink = Arc::new(Sink::connect_new(&handle.mixer()));
+        let sink = Arc::new(Sink::connect_new(handle.mixer()));
 
         sink.pause();
 
@@ -156,10 +156,9 @@ impl AudioPlayer {
 
                             if is_playing
                                 && let Some(manager) = &media_state_manager_clone
+                                && let Err(e) = manager.set_position(local_current_pos)
                             {
-                                if let Err(e) = manager.set_position(local_current_pos) {
-                                    tracing::warn!("更新系统媒体控件进度失败: {e:?}");
-                                }
+                                warn!("更新系统媒体控件进度失败: {e:?}");
                             }
                         } else {
                             break;
@@ -187,11 +186,10 @@ impl AudioPlayer {
                                     })
                                     .await;
 
-                                if let Some(manager) = &media_state_manager_clone {
-                                    if let Err(e) = manager.set_position(local_current_pos) {
+                                if let Some(manager) = &media_state_manager_clone
+                                    && let Err(e) = manager.set_position(local_current_pos) {
                                         tracing::warn!("更新系统媒体控件进度失败: {e:?}");
                                     }
-                                }
                             }
                         }
                     }
@@ -484,7 +482,7 @@ impl AudioPlayer {
             })
             .await?;
 
-            self.sink = Arc::new(Sink::connect_new(&self.stream_handle.mixer()));
+            self.sink = Arc::new(Sink::connect_new(self.stream_handle.mixer()));
             self.sink.set_volume(self.volume as f32);
             self.current_decoder_handle = None;
         }
@@ -530,8 +528,8 @@ impl AudioPlayer {
 
         let status_event = AudioThreadEvent::LoadAudio {
             music_id: song_data.get_id(),
-            music_info: info,
-            quality: quality,
+            music_info: Box::new(info),
+            quality,
         };
         self.emitter().emit(status_event).await?;
         self.emitter()

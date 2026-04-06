@@ -33,6 +33,9 @@ pub enum CurrentStatus {
     InITunesSingularTranslationText,
     InITunesTransliterationText,
 
+    InITunesSongwriters,
+    InITunesSongwriter,
+
     InTtml,
 }
 
@@ -107,6 +110,17 @@ impl<'a, R: BufRead> TTMLParser<'a, R> {
             b"iTunesMetadata" => {
                 if let CurrentStatus::InMetadata = self.status {
                     self.status = CurrentStatus::InITunesMetadata;
+                }
+            }
+            b"songwriters" => {
+                if let CurrentStatus::InITunesMetadata = self.status {
+                    self.status = CurrentStatus::InITunesSongwriters;
+                }
+            }
+            b"songwriter" => {
+                if let CurrentStatus::InITunesSongwriters = self.status {
+                    self.status = CurrentStatus::InITunesSongwriter;
+                    self.str_buf.clear();
                 }
             }
             b"translations" => match self.status {
@@ -411,11 +425,40 @@ impl<'a, R: BufRead> TTMLParser<'a, R> {
                 | CurrentStatus::InITunesTranslation
                 | CurrentStatus::InITunesTranslationText
                 | CurrentStatus::InITunesSingularTranslationText
-                | CurrentStatus::InITunesTransliterationText => {
+                | CurrentStatus::InITunesTransliterationText
+                | CurrentStatus::InITunesSongwriters
+                | CurrentStatus::InITunesSongwriter => {
                     self.status = CurrentStatus::InMetadata;
                 }
                 _ => {}
             },
+            b"songwriters" => {
+                if let CurrentStatus::InITunesSongwriters = self.status {
+                    self.status = CurrentStatus::InITunesMetadata;
+                }
+            }
+            b"songwriter" => {
+                if let CurrentStatus::InITunesSongwriter = self.status {
+                    self.status = CurrentStatus::InITunesSongwriters;
+
+                    let meta_key_str = "songWriters";
+                    let meta_value = self.str_buf.clone();
+                    if let Some(values) = self
+                        .result
+                        .metadata
+                        .iter_mut()
+                        .find(|x| x.0 == meta_key_str)
+                    {
+                        values.1.push(Cow::Owned(meta_value));
+                    } else {
+                        self.result.metadata.push((
+                            Cow::Owned(meta_key_str.to_string()),
+                            vec![Cow::Owned(meta_value)],
+                        ));
+                    }
+                    self.str_buf.clear();
+                }
+            }
             b"text" => {
                 if let Some(key) = self.current_itunes_key.take() {
                     if self.status == CurrentStatus::InITunesTranslationText {
@@ -611,7 +654,8 @@ impl<'a, R: BufRead> TTMLParser<'a, R> {
                     | CurrentStatus::InRomanSpan
                     | CurrentStatus::InSpanInBackgroundSpan
                     | CurrentStatus::InTranslationSpanInBackgroundSpan
-                    | CurrentStatus::InRomanSpanInBackgroundSpan => {
+                    | CurrentStatus::InRomanSpanInBackgroundSpan
+                    | CurrentStatus::InITunesSongwriter => {
                         self.str_buf.push(decoded_char);
                     }
                     CurrentStatus::InITunesTranslationText
@@ -665,7 +709,8 @@ impl<'a, R: BufRead> TTMLParser<'a, R> {
                 | CurrentStatus::InRomanSpan
                 | CurrentStatus::InSpanInBackgroundSpan
                 | CurrentStatus::InTranslationSpanInBackgroundSpan
-                | CurrentStatus::InRomanSpanInBackgroundSpan => {
+                | CurrentStatus::InRomanSpanInBackgroundSpan
+                | CurrentStatus::InITunesSongwriter => {
                     self.str_buf.push_str(&txt);
                 }
                 CurrentStatus::InITunesTranslationText
