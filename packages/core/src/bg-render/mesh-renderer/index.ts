@@ -83,7 +83,8 @@ class GLProgram implements Disposable {
 		gl.compileShader(shader);
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
 			throw new Error(
-				`Failed to compile shader for type ${type} "${this.label
+				`Failed to compile shader for type ${type} "${
+					this.label
 				}": ${gl.getShaderInfoLog(shader)}`,
 			);
 		}
@@ -687,11 +688,31 @@ class BHPMesh extends Mesh {
 						const v2 = normPowers[vIdx + 2];
 						const v3 = normPowers[vIdx + 3];
 
-						const px = v0 * this.tempUx[0] + v1 * this.tempUx[1] + v2 * this.tempUx[2] + v3 * this.tempUx[3];
-						const py = v0 * this.tempUy[0] + v1 * this.tempUy[1] + v2 * this.tempUy[2] + v3 * this.tempUy[3];
-						const pr = v0 * this.tempUr[0] + v1 * this.tempUr[1] + v2 * this.tempUr[2] + v3 * this.tempUr[3];
-						const pg = v0 * this.tempUg[0] + v1 * this.tempUg[1] + v2 * this.tempUg[2] + v3 * this.tempUg[3];
-						const pb = v0 * this.tempUb[0] + v1 * this.tempUb[1] + v2 * this.tempUb[2] + v3 * this.tempUb[3];
+						const px =
+							v0 * this.tempUx[0] +
+							v1 * this.tempUx[1] +
+							v2 * this.tempUx[2] +
+							v3 * this.tempUx[3];
+						const py =
+							v0 * this.tempUy[0] +
+							v1 * this.tempUy[1] +
+							v2 * this.tempUy[2] +
+							v3 * this.tempUy[3];
+						const pr =
+							v0 * this.tempUr[0] +
+							v1 * this.tempUr[1] +
+							v2 * this.tempUr[2] +
+							v3 * this.tempUr[3];
+						const pg =
+							v0 * this.tempUg[0] +
+							v1 * this.tempUg[1] +
+							v2 * this.tempUg[2] +
+							v3 * this.tempUg[3];
+						const pb =
+							v0 * this.tempUb[0] +
+							v1 * this.tempUb[1] +
+							v2 * this.tempUb[2] +
+							v3 * this.tempUb[3];
 
 						const uvX = sX + v * invTH;
 						const uvY = 1 - sY - u * invTW;
@@ -872,7 +893,17 @@ export class MeshGradientRenderer extends BaseRenderer {
 
 		this.fboTexture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.fboTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+		gl.texImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			width,
+			height,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			null,
+		);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -880,7 +911,13 @@ export class MeshGradientRenderer extends BaseRenderer {
 
 		this.fbo = gl.createFramebuffer();
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.fboTexture, 0);
+		gl.framebufferTexture2D(
+			gl.FRAMEBUFFER,
+			gl.COLOR_ATTACHMENT0,
+			gl.TEXTURE_2D,
+			this.fboTexture,
+			0,
+		);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
@@ -972,10 +1009,18 @@ export class MeshGradientRenderer extends BaseRenderer {
 			// 2. 渲染 FBO 到屏幕
 			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 			gl.enable(gl.BLEND);
-			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+			gl.blendFuncSeparate(
+				gl.SRC_ALPHA,
+				gl.ONE_MINUS_SRC_ALPHA,
+				gl.ONE,
+				gl.ONE_MINUS_SRC_ALPHA,
+			);
 			this.quadProgram.use();
 			this.quadProgram.setUniform1i("u_texture", 0);
-			this.quadProgram.setUniform1f("u_alpha", easeInOutSine(Math.min(1, Math.max(0, state.alpha))));
+			this.quadProgram.setUniform1f(
+				"u_alpha",
+				easeInOutSine(Math.min(1, Math.max(0, state.alpha))),
+			);
 
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, this.fboTexture);
@@ -1024,7 +1069,12 @@ export class MeshGradientRenderer extends BaseRenderer {
 
 		this.gl = gl;
 		gl.enable(gl.BLEND);
-		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+		gl.blendFuncSeparate(
+			gl.SRC_ALPHA,
+			gl.ONE_MINUS_SRC_ALPHA,
+			gl.ONE,
+			gl.ONE_MINUS_SRC_ALPHA,
+		);
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.ALWAYS);
 
@@ -1047,14 +1097,7 @@ export class MeshGradientRenderer extends BaseRenderer {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.quadBuffer);
 		gl.bufferData(
 			gl.ARRAY_BUFFER,
-			new Float32Array([
-				-1, -1,
-				1, -1,
-				-1, 1,
-				-1, 1,
-				1, -1,
-				1, 1,
-			]),
+			new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
 			gl.STATIC_DRAW,
 		);
 
@@ -1227,8 +1270,8 @@ export class MeshGradientRenderer extends BaseRenderer {
 				Math.random() > 0.8
 					? generateControlPoints(6, 6)
 					: CONTROL_POINT_PRESETS[
-					Math.floor(Math.random() * CONTROL_POINT_PRESETS.length)
-					];
+							Math.floor(Math.random() * CONTROL_POINT_PRESETS.length)
+						];
 
 			newMesh.resizeControlPoints(chosenPreset.width, chosenPreset.height);
 			const uPower = 2 / (chosenPreset.width - 1);

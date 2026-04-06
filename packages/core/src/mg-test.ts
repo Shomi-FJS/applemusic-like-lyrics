@@ -150,9 +150,9 @@ function updateResult() {
 }
 
 function resizeControlPoint() {
-	document
-		.querySelectorAll(".dragger")
-		.forEach((el) => { el.parentElement?.removeChild(el); });
+	document.querySelectorAll(".dragger").forEach((el) => {
+		el.parentElement?.removeChild(el);
+	});
 	mgRenderer.resizeControlPoints(
 		debugValues.controlPointSize,
 		debugValues.controlPointSize,
@@ -173,9 +173,10 @@ function resizeControlPoint() {
 			dragger.setAttribute("y", `${y}`);
 			dragger.className = "dragger";
 			dragger.style.left = `${(x * 100) / (debugValues.controlPointSize - 1)}%`;
-			dragger.style.top = `${((debugValues.controlPointSize - y - 1) * 100) /
+			dragger.style.top = `${
+				((debugValues.controlPointSize - y - 1) * 100) /
 				(debugValues.controlPointSize - 1)
-				}%`;
+			}%`;
 
 			// Add U/V handles
 			const uLine = document.createElement("div");
@@ -209,10 +210,14 @@ function resizeControlPoint() {
 					const dy = e.clientY - centerY;
 					const dist = Math.sqrt(dx * dx + dy * dy);
 
-					const isCorner = (x === 0 || x === debugValues.controlPointSize - 1) &&
+					const isCorner =
+						(x === 0 || x === debugValues.controlPointSize - 1) &&
 						(y === 0 || y === debugValues.controlPointSize - 1);
-					const isEdge = x === 0 || x === debugValues.controlPointSize - 1 ||
-						y === 0 || y === debugValues.controlPointSize - 1;
+					const isEdge =
+						x === 0 ||
+						x === debugValues.controlPointSize - 1 ||
+						y === 0 ||
+						y === debugValues.controlPointSize - 1;
 
 					if (!isCorner) {
 						if (isEdge) {
@@ -227,7 +232,9 @@ function resizeControlPoint() {
 					updateControlPointDraggers();
 					updateResult();
 					if (draggerGui) {
-						draggerGui.controllersRecursive().forEach(c => { c.updateDisplay(); });
+						draggerGui.controllersRecursive().forEach((c) => {
+							c.updateDisplay();
+						});
 					}
 				}
 				function onMouseUp() {
@@ -252,10 +259,14 @@ function resizeControlPoint() {
 					const dy = e.clientY - centerY;
 					const dist = Math.sqrt(dx * dx + dy * dy);
 
-					const isCorner = (x === 0 || x === debugValues.controlPointSize - 1) &&
+					const isCorner =
+						(x === 0 || x === debugValues.controlPointSize - 1) &&
 						(y === 0 || y === debugValues.controlPointSize - 1);
-					const isEdge = x === 0 || x === debugValues.controlPointSize - 1 ||
-						y === 0 || y === debugValues.controlPointSize - 1;
+					const isEdge =
+						x === 0 ||
+						x === debugValues.controlPointSize - 1 ||
+						y === 0 ||
+						y === debugValues.controlPointSize - 1;
 
 					if (!isCorner) {
 						if (isEdge) {
@@ -271,7 +282,9 @@ function resizeControlPoint() {
 					updateControlPointDraggers();
 					updateResult();
 					if (draggerGui) {
-						draggerGui.controllersRecursive().forEach(c => { c.updateDisplay(); });
+						draggerGui.controllersRecursive().forEach((c) => {
+							c.updateDisplay();
+						});
 					}
 				}
 				function onMouseUp() {
@@ -301,7 +314,8 @@ function resizeControlPoint() {
 			let dragging = false;
 			dragger.addEventListener("mousedown", (evt) => {
 				evt.stopPropagation();
-				const isCorner = (x === 0 || x === debugValues.controlPointSize - 1) &&
+				const isCorner =
+					(x === 0 || x === debugValues.controlPointSize - 1) &&
 					(y === 0 || y === debugValues.controlPointSize - 1);
 
 				function onMouseMove(evt: MouseEvent) {
@@ -360,8 +374,13 @@ function subdivide() {
 }
 
 function reloadImage() {
-	mgRenderer.setAlbum(debugValues.image)
-		.catch(() => mgRenderer.setAlbum("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAADUExURf///6fEG8gAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAKSURBVBjTY2AAAAACAAGYY2zXAAAAAElFTkSuQmCC"))
+	mgRenderer
+		.setAlbum(debugValues.image)
+		.catch(() =>
+			mgRenderer.setAlbum(
+				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAADUExURf///6fEG8gAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAKSURBVBjTY2AAAAACAAGYY2zXAAAAAElFTkSuQmCC",
+			),
+		)
 		.finally(() => {
 			resizeControlPoint();
 			updateControlPointDraggers();
@@ -374,9 +393,7 @@ reloadImage();
 const gui = new GUI();
 gui.close();
 gui.title("MG Renderer 调试页面");
-gui.add(debugValues, "image")
-	.name("图片 URL")
-	.onFinishChange(reloadImage);
+gui.add(debugValues, "image").name("图片 URL").onFinishChange(reloadImage);
 gui
 	.add(debugValues, "controlPointSize", 3, 10, 1)
 	.name("控制点矩阵大小")
@@ -423,7 +440,9 @@ const actions = {
 			if (loadedPreset) {
 				debugValues.controlPointSize = loadedPreset.width;
 				debugValues.controlPointSize = loadedPreset.height;
-				gui.controllersRecursive().forEach(c => { c.updateDisplay(); });
+				gui.controllersRecursive().forEach((c) => {
+					c.updateDisplay();
+				});
 
 				resizeControlPoint();
 
@@ -445,7 +464,7 @@ const actions = {
 		} catch (e) {
 			alert(`加载失败，请检查代码格式是否正确\n${e}`);
 		}
-	}
+	},
 };
 
 gui.add(actions, "copyCode").name("复制预设代码");

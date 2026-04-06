@@ -140,7 +140,7 @@ function cleanUnintentionalOverlaps(lines: LyricLine[]) {
 }
 
 /**
- * 尝试让歌词提前最多 1 秒开始，如果有重叠则尝试最多提前 400ms 或上一行时长的 30%
+ * 尝试让歌词提前最多 600ms 开始，如果有重叠则尝试最多提前 400ms 或上一行时长的 30%
  */
 function tryAdvanceStartTime(lines: LyricLine[]) {
 	for (let i = lines.length - 1; i >= 0; i--) {

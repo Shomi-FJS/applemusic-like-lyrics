@@ -775,6 +775,25 @@ export abstract class LyricPlayerBase
 				this.calcLayout();
 			}
 		}
+
+		if (this.bufferedLines.size === 0 && this.processedLines.length > 0) {
+			const lastLine = this.processedLines[this.processedLines.length - 1];
+
+			const bottomEl = this.bottomLine.getElement();
+			const hasBottomContent = bottomEl.innerHTML.trim().length > 0;
+
+			if (time >= lastLine.endTime) {
+				const targetIndex = hasBottomContent
+					? this.processedLines.length
+					: this.processedLines.length - 1;
+
+				if (this.scrollToIndex !== targetIndex) {
+					this.scrollToIndex = targetIndex;
+					this.calcLayout();
+				}
+			}
+		}
+
 		this.lastCurrentTime = time;
 	}
 
@@ -914,6 +933,7 @@ export abstract class LyricPlayerBase
 					break;
 			}
 		}
+
 		const latestIndex = Math.max(...this.bufferedLines);
 		let delay = 0;
 		let baseDelay = sync ? 0 : 0.05;
@@ -988,7 +1008,7 @@ export abstract class LyricPlayerBase
 				curPos,
 				targetScale,
 				targetOpacity,
-				window.innerWidth <= 1024 ? blurLevel * 0.8 : blurLevel,
+				blurLevel,
 				force,
 				delay,
 				renderMode,
