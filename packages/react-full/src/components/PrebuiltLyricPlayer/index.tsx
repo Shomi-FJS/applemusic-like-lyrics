@@ -277,7 +277,7 @@ const LyricContributorBadge: FC = React.memo(() => {
 				alignItems: "center",
 			}}
 		>
-			歌词贡献者：@{lyricContributor}
+			逐词创作者：@{lyricContributor}
 		</motion.div>
 	);
 });

@@ -1,6 +1,7 @@
 import { FFTPlayer } from "@applemusic-like-lyrics/fft";
 import { parseTTML } from "@applemusic-like-lyrics/lyric";
 import {
+	contributorSourceAtom,
 	fftDataAtom,
 	fftDataRangeAtom,
 	hideLyricViewAtom,
@@ -43,7 +44,11 @@ import {
 	wsProtocolListenAddrAtom,
 } from "../../states/appAtoms.ts";
 import { emitAudioThread } from "../../utils/player.ts";
-import { fetchLyricContributorByNCMId } from "../../utils/ttml-contributor-search.ts";
+import {
+	fetchLyricContributorByNCMId,
+	setContributorSource,
+	ContributorSourceMode,
+} from "../../utils/ttml-contributor-search.ts";
 import { FFTToLowPassContext } from "../LocalMusicContext/index.tsx";
 
 interface WSArtist {
@@ -133,6 +138,11 @@ export const WSProtocolMusicContext: FC<WSProtocolMusicContextProps> = ({
 	const fftPlayer = useRef<FFTPlayer | undefined>(undefined);
 	const contributorFetchTimerRef = useRef<number | null>(null);
 	const fftDataRange = useAtomValue(fftDataRangeAtom);
+
+	useEffect(() => {
+		const source = store.get(contributorSourceAtom);
+		setContributorSource(source as ContributorSourceMode);
+	}, [store]);
 
 	useEffect(() => {
 		if (!isLyricOnly) {

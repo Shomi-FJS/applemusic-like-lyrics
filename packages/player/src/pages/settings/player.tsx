@@ -517,11 +517,11 @@ const LyricContentSettings = () => {
 			<SwitchSettings
 				label={t(
 					"page.settings.lyricContent.showLyricContributor.label",
-					"显示歌词贡献者",
+					"显示逐词创作者",
 				)}
 				description={t(
 					"page.settings.lyricContent.showLyricContributor.description",
-					"在歌词播放界面显示逐词歌词贡献者的 GitHub 用户名",
+					"在歌词播放界面显示逐词创作者的 GitHub 用户名",
 				)}
 				configAtom={showLyricContributorAtom}
 			/>
