@@ -20,3 +20,5 @@ target/
 *.tsbuildinfo
 .million/
 **/dist
+vendor/
+.trae/

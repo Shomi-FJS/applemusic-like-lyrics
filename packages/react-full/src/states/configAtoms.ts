@@ -443,3 +443,42 @@ export const fftDataRangeAtom: WritableAtom<
 	number,
 ]);
 //#endregion
+
+//#region 歌词贡献者配置
+/**
+ * 是否显示歌词贡献者标签
+ * @default false
+ */
+export const showLyricContributorAtom: WritableAtom<
+	boolean,
+	[boolean | ((prev: boolean) => boolean) | typeof RESET],
+	void
+> = atomWithStorage("amll-react-full.showLyricContributor", false);
+
+/**
+ * 歌词贡献者查询源
+ * - `mirror`: 使用镜像源查询
+ * - `local`: 使用本地源查询（需手动下载缓存服务）
+ */
+export enum ContributorSource {
+	Mirror = "mirror",
+	Local = "local",
+}
+
+/**
+ * 歌词贡献者查询源设置
+ * @default ContributorSource.Mirror
+ */
+export const contributorSourceAtom: WritableAtom<
+	ContributorSource,
+	[
+		| ContributorSource
+		| ((prev: ContributorSource) => ContributorSource)
+		| typeof RESET,
+	],
+	void
+> = atomWithStorage<ContributorSource>(
+	"amll-react-full.contributorSource",
+	ContributorSource.Mirror,
+);
+//#endregion

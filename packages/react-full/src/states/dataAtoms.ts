@@ -160,3 +160,10 @@ export const fftDataAtom: PrimitiveAtom<number[]> = atom<number[]>([]);
  */
 export const lowFreqVolumeAtom: PrimitiveAtom<number> = atom<number>(1);
 //#endregion
+
+//#region 歌词贡献者信息
+/**
+ * 歌词贡献者信息
+ */
+export const lyricContributorAtom: PrimitiveAtom<string | null> = atom<string | null>(null);
+//#endregion
