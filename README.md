@@ -17,8 +17,14 @@ Although the goal of this project is not to imitate it completely, it will polis
 **—— AMLL Series Projects ——**
 
 [AMLL TTML DB - TTML Syllable Lyric Database](https://github.com/amll-dev/amll-ttml-db)
-/
+
 [AMLL TTML Tool - TTML Syllable Lyric Editor](https://github.com/amll-dev/amll-ttml-tool)
+/
+[AMLL Editor - Next-Gen TTML Syllable Lyric Editor](https://github.com/amll-dev/amll-editor)
+
+[AMLL Player - Loacal Music Player](https://github.com/amll-dev/amll-player)
+/
+[AMLL Page - Web Music Player](https://github.com/amll-dev/amll-page)
 
 [Projects that references AMLL](https://github.com/amll-dev/applemusic-like-lyrics/discussions/397)
 
