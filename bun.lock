@@ -17,7 +17,7 @@
     },
     "packages/core": {
       "name": "@applemusic-like-lyrics/core",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "@ungap/structured-clone": "catalog:",
         "bezier-easing": "^3.0.0",
@@ -181,7 +181,7 @@
     },
     "packages/react": {
       "name": "@applemusic-like-lyrics/react",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "@applemusic-like-lyrics/core": "workspace:^",
       },
@@ -252,7 +252,7 @@
     },
     "packages/vue": {
       "name": "@applemusic-like-lyrics/vue",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "dependencies": {
         "@applemusic-like-lyrics/core": "workspace:^",
       },
@@ -289,6 +289,9 @@
     "@applemusic-like-lyrics/lyric",
     "nx",
   ],
+  "patchedDependencies": {
+    "@astrojs/starlight@0.38.3": "patches/@astrojs%2Fstarlight@0.38.3.patch",
+  },
   "catalog": {
     "@biomejs/biome": "^2.4.8",
     "@rolldown/plugin-babel": "^0.2.3",

@@ -6,7 +6,7 @@
 
 [English](./README.md) / 简体中文
 
-一个基于 Web 技术制作的类 Apple Music 歌词显示组件库，同时支持[ DOM 原生](./packages/core/README.md)、[React ](./packages/react/README.md)和[ Vue ](./packages/react/README.md)绑定。
+一个基于 Web 技术制作的类 Apple Music 歌词显示组件库，同时支持 [DOM 原生](./packages/core/README.md)、[React](./packages/react/README.md) 和 [Vue](./packages/react/README.md) 绑定。
 
 这是你能在前端系里能见到的最像 iPad Apple Music 的播放页面了。
 
@@ -33,22 +33,24 @@
 
 ### 主要模块
 
--   [![AMLL-Core](https://img.shields.io/badge/Core-%233178c6?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/core/README.md)：AMLL 核心组件库，以 DOM 原生方式编写，提供歌词显示组件和动态流体背景组件
--   [![AMLL-React](https://img.shields.io/badge/React-%23149eca?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/react/README.md)：AMLL React 绑定，提供 React 组件形式的歌词显示组件和动态流体背景组件
--   [![AMLL-Vue](https://img.shields.io/badge/Vue-%2342d392?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/vue/README.md)：AMLL Vue 绑定，提供 Vue 组件形式的歌词显示组件和动态流体背景组件
--   [![AMLL-Lyric](https://img.shields.io/badge/Lyric-%23FB8C84?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/lyric/README.md)：AMLL 歌词解析模块，提供对 LyRiC, YRC, QRC, Lyricify Syllable 各种歌词格式的解析和序列化支持
+-   [![AMLL-Core](https://img.shields.io/badge/Core-%233178c6?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/core/README-CN.md)：AMLL 核心组件库，以 DOM 原生方式编写，提供歌词显示组件和动态流体背景组件
+-   [![AMLL-React](https://img.shields.io/badge/React-%23149eca?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/react/README-CN.md)：AMLL React 绑定，提供 React 组件形式的歌词显示组件和动态流体背景组件
+-   [![AMLL-React-Full](https://img.shields.io/badge/React%20Full-%23149eca?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/react-full/README-CN.md)：AMLL React 完整播放器组件库，提供可组合的播放页面组件
+-   [![AMLL-Vue](https://img.shields.io/badge/Vue-%2342d392?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/vue/README-CN.md)：AMLL Vue 绑定，提供 Vue 组件形式的歌词显示组件和动态流体背景组件
+-   [![AMLL-Lyric](https://img.shields.io/badge/Lyric-%23FB8C84?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/lyric/README-CN.md)：AMLL 歌词解析模块，提供对 LyRiC, YRC, QRC, Lyricify Syllable 各种歌词格式的解析和序列化支持
+-   [![AMLL-TTML](https://img.shields.io/badge/TTML-%23FB8C84?label=Apple%20Music-like%20Lyrics&labelColor=%23FB5C74)](./packages/ttml/README-CN.md)：AMLL TTML 处理模块，提供 TTML 的结构化解析、生成，以及与 AMLL 歌词数据的互转能力
 
 ## 浏览器兼容性提醒
 
 本组件框架最低要求使用以下浏览器或更新版本：
 
--   Chromuim/Edge 91+
+-   Chromium/Edge 91+
 -   Firefox 100+
 -   Safari 9.1+
 
 完整呈现组件所有效果需要使用以下浏览器或更新版本：
 
--   Chromuim 120+
+-   Chromium 120+
 -   Firefox 100+
 -   Safari 15.4+
 

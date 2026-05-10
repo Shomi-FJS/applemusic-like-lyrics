@@ -1,3 +1,16 @@
+## 0.4.2 (2026-05-01)
+
+### Patch Changes
+
+- **feat(core):** 平衡行长度时优先在标点处换行 ([#503](https://github.com/amll-dev/applemusic-like-lyrics/pull/503))
+- **fix:** 修复背景行注音高度错误 ([#497](https://github.com/amll-dev/applemusic-like-lyrics/pull/497))
+- **fix(core):** 修正平衡行长度时的行宽度计算 ([#502](https://github.com/amll-dev/applemusic-like-lyrics/pull/502))
+
+### Contributors
+
+- apoint123 [@apoint123](https://github.com/apoint123)
+- Linho
+
 ## 0.4.1 (2026-04-23)
 
 ### Patch Changes

@@ -4,10 +4,11 @@
  * @author SteveXMH
  */
 
-import type { LyricLine } from "../../interfaces.ts";
-import "../../styles/index.css";
-import styles from "../../styles/lyric-player.module.css";
-import { type LyricLineBase, LyricPlayerBase } from "../base.ts";
+import type { LyricLine } from "#interfaces";
+import "#styles/index.css";
+import type { LyricLineBase } from "#lyric/base/line.ts";
+import { LyricPlayerBase } from "#lyric/base/index.ts";
+import styles from "#styles/lyric-player.module.css";
 import { LyricLineEl, type RawLyricLineMouseEvent } from "./lyric-line.ts";
 
 /**
@@ -163,12 +164,12 @@ export class DomLyricPlayer extends LyricPlayerBase {
 	}
 
 	override update(delta = 0): void {
-		if (!this.initialLayoutFinished) return;
+		if (!this.timelineState.initialLayoutFinished) return;
 		super.update(delta);
 		if (!this.supportMaskImage) {
 			this.element.style.setProperty(
 				"--amll-player-time",
-				`${this.currentTime}`,
+				`${this.timelineState.currentTime}`,
 			);
 		}
 		if (!this.isPageVisible) return;
