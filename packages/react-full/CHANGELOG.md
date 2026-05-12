@@ -1,3 +1,13 @@
+## 0.4.0 (2026-05-12)
+
+### Minor Changes
+
+- **refactor:** 整理核心播放器代码结构，将抽象接口部分集中到统一目录 ([#508](https://github.com/amll-dev/applemusic-like-lyrics/pull/508))
+
+### Contributors
+
+- Linho
+
 ## 0.3.2 (2026-04-23)
 
 ### Patch Changes
